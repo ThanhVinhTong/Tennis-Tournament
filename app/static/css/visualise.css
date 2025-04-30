@@ -1,0 +1,163 @@
+:root {
+    --tennis-green: #1b842c;
+    --tennis-clay: #d3832b;
+    --tennis-grass: #5a8f3d;
+    --tennis-hard: #3a6ea5;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    background-color: var(--tennis-green);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.nav-link {
+    color: white !important;
+}
+
+.tennis-icon {
+    color: var(--tennis-green);
+    margin-right: 8px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: none;
+}
+
+.card-header {
+    background-color: var(--tennis-green);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: bold;
+}
+
+.surface-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: white;
+}
+
+.grass-badge {
+    background-color: var(--tennis-grass);
+}
+
+.clay-badge {
+    background-color: var(--tennis-clay);
+}
+
+.hard-badge {
+    background-color: var(--tennis-hard);
+}
+
+.player-stats {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--tennis-green);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.match-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.match-item {
+    border-left: 4px solid var(--tennis-green);
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.winner {
+    font-weight: bold;
+    color: var(--tennis-green);
+}
+
+.court-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.court-grass {
+    background-color: var(--tennis-grass);
+}
+
+.court-clay {
+    background-color: var(--tennis-clay);
+}
+
+.court-hard {
+    background-color: var(--tennis-hard);
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    background-color: var(--tennis-green);
+}
+
+.tournament-card {
+    transition: transform 0.3s;
+}
+
+.tournament-card:hover {
+    transform: translateY(-5px);
+}
+
+.share-btn {
+    background-color: var(--tennis-green);
+    color: white;
+    border: none;
+}
+
+.share-btn:hover {
+    background-color: #156821;
+    color: white;
+}
+
+.surface-tabs .nav-link {
+    color: #495057 !important;
+}
+
+.surface-tabs .nav-link.active {
+    color: var(--tennis-green) !important;
+    font-weight: bold;
+    border-bottom: 3px solid var(--tennis-green);
+}
+
+footer {
+    background-color: var(--tennis-green);
+    color: white;
+    padding: 20px 0;
+    margin-top: 40px;
+}

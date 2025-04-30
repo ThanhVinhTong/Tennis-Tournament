@@ -1,0 +1,31 @@
+
+body {
+  background-color: #f8f9fa;
+}
+
+.section-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+}
+
+.section-card h5 {
+  color: var(--tennis-green);
+  font-weight: bold;
+}
+
+.section-card .form-label {
+  font-weight: 500;
+}
+
+.btn-upload {
+  background-color: var(--tennis-green);
+  color: white;
+  border: none;
+}
+
+.btn-upload:hover {
+  background-color: #156821;
+}

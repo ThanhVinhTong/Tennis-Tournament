@@ -188,7 +188,93 @@
         </div>
     </div>
     <!-- Tournament End -->
-     
+    
+    <!-- Tennis News Start -->
+    <div class="container-fluid position-relative tennis-new my-5">
+        <div class="container">
+            <div class="row px-3 align-items-center">
+                <div class="col-md-6 p-y-4-5 bg-secondary">
+                    <div class="py-5 px-3">
+                        <h1 class="mb-4 text-white">📰 Tennis News</h1>
+                        <p class="m-0 text-white">Catch the latest headlines from the world of tennis - breaking news,
+                            player updates, match previews, and everything happening on and off the court. Stay informed
+                            with real-time updates curated just for tennis fans.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Start -->
+    <div class="container pt-5">
+        <div class="d-flex flex-column text-center mb-5">
+            <h4 class="text-primary font-weight-bold">New Blog</h4>
+            <h4 class="display-4 font-weight-bold">Latest Article From Blog</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 mb-5 blog-item">
+                <img class="img-fluid mb-4" 
+               
+                    src="{{ url_for('static', filename='images/blog-djokovic-madrid-2025-draw-preview.jpg') }}"
+                    alt="Djokovic Madrid 2025 Draw Preview">
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="d-flex flex-column align-items-center justify-content-center rounded-circle bg-primary text-white"
+                        style="width: 80px; height: 80px;">
+                        <small>21</small>
+                        <strong class="text-uppercase m-0 text-white">Apr</strong>
+                        <small>2025</small>
+                    </div>
+                    <div class="pl-3">
+                        <h3 class="font-weight-bold">Madrid Open 2025: Djokovic and Alcaraz Set for Potential Clash</h3>
+                        <div class="d-flex">
+                            <small class="mr-2 text-muted"><i class="fa fa-user"></i> Sam Jacot</small>
+                            <small class="mr-2 text-muted"><i class="fa fa-folder"></i> Tournament News</small>
+                            <small class="mr-2 text-muted"><i class="fa fa-comments"></i> 15 Comments</small>
+                        </div>
+                    </div>
+                </div>
+                <p>Three-time Madrid champion Djokovic (30-9 record) and two-time champion Alcaraz land in the same half 
+                    of the ATP Masters 1000 draw. Alcaraz enters fresh from his Monte-Carlo victory, while Djokovic chases 
+                    his 100th tour-level title. The potential semi-final clash would be their ninth meeting, with Djokovic 
+                    currently leading 5-3 in their head-to-head series.</p>
+                <a class="btn btn-outline-primary mt-2 px-3" href="">Read More <i class="fa fa-angle-right"></i></a>
+            </div>
+            <div class="col-lg-6 mb-5 blog-item">
+                <img class="img-fluid mb-4" 
+                    src="{{ url_for('static', filename='images/blog-Noami-Osaka-Mouratoglou-Acad-2025-preview.jpg') }}"
+                    alt="Noami Osaka Mouratoglou Academy 2025 Preview">
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="d-flex flex-column align-items-center justify-content-center rounded-circle bg-primary text-white"
+                        style="width: 80px; height: 80px;">
+                        <small>21</small>
+                        <strong class="text-uppercase m-0 text-white">Apr</strong>
+                        <small>2025</small>
+                    </div>
+                    <div class="pl-3">
+                        <h3 class="font-weight-bold">Osaka's Clay Court Journey: Training at Mouratoglou Academy</h3>
+                        <div class="d-flex">
+                            <small class="mr-2 text-muted"><i class="fa fa-user"></i> Carole Bouchard</small>
+                            <small class="mr-2 text-muted"><i class="fa fa-folder"></i> Player News</small>
+                            <small class="mr-2 text-muted"><i class="fa fa-comments"></i> 8 Comments</small>
+                        </div>
+                    </div>
+                </div>
+                <p>Former World No.1 Naomi Osaka reveals her dedicated preparation for the clay season at the Mouratoglou Academy. 
+                    After skipping earlier clay events, Osaka begins her campaign in Madrid feeling stronger and more confident. 
+                    Working with Patrick Mouratoglou has boosted her confidence, as she aims to build on her memorable 2024 
+                    Roland-Garros performance against Iga Swiatek.</p>
+                <a class="btn btn-outline-primary mt-2 px-3" href="">Read More <i class="fa fa-angle-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <!-- Blog End -->
+    <!-- Tennis News End -->
+
     <!-- Footer -->
     <footer class="footer mt-5">
         <div class="container">
@@ -199,7 +285,7 @@
                         <a href="https://github.com/dynamicCat/CITS5505-Group-60-project" target="_blank">GitHub</a>
                     </div>
                 </div>
-                <div class="col-md-5"></div>
+                <div class="col-md-5">
                     <h5 style="color: #fff;">Contact Info</h5>
                     <p style="color: #fff;">Group 60 - CITS5505</p>
                     <p style="color: #fff;">Location: Perth, WA, Australia</p>
@@ -210,7 +296,6 @@
             </div>
         </div>
     </footer>
-    <!-- Footer End -->
 
     <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>

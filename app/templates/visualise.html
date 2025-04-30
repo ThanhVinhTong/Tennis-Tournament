@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Tournament Analytics | Visualisation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <link rel="stylesheet" href="../static/css/visualise.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <i class="fas fa-tennis-ball me-2"></i>Tennis Tournament
+              </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.endpoint=='main.home' %}active{% endif %}" href="{{ url_for('main.home') }}">
+                        <i class="fas fa-home"></i> Home
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.endpoint=='main.upload' %}active{% endif %}" href="{{ url_for('main.upload') }}">
+                        <i class="fas fa-upload"></i> Upload
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.endpoint=='main.visualise' %}active{% endif %}" href="{{ url_for('main.visualise') }}">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.endpoint=='main.share' %}active{% endif %}" href="{{ url_for('main.share') }}">
+                        <i class="fas fa-share-alt"></i> Share
+                      </a>
+                    </li>
+                  </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        <i class="fas fa-user"></i> John Doe
+                    </span>
+                    <button class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-chart-bar tennis-icon"></i>Match Analytics Dashboard</h2>
+                <p class="text-muted">Analyze your tournament performance and statistics</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="player-stats text-center">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Matches Played</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="player-stats text-center">
+                    <div class="stat-value">18</div>
+                    <div class="stat-label">Matches Won</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="player-stats text-center">
+                    <div class="stat-value">75%</div>
+                    <div class="stat-label">Win Percentage</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="player-stats text-center">
+                    <div class="stat-value">3.2</div>
+                    <div class="stat-label">Win/Loss Ratio</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <!-- Performance Trends Card -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-chart-line me-2"></i>Performance Trends</span>
+                        <div>
+                            <select class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                                <option>Last 6 Months</option>
+                                <option selected>Last Year</option>
+                                <option>All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="performanceChart" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Surface Performance Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-table-tennis me-2"></i>Performance by Surface
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs surface-tabs mb-3" id="surfaceTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="grass-tab" data-bs-toggle="tab" data-bs-target="#grass" type="button" role="tab">Grass</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="clay-tab" data-bs-toggle="tab" data-bs-target="#clay" type="button" role="tab">Clay</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="hard-tab" data-bs-toggle="tab" data-bs-target="#hard" type="button" role="tab">Hard Court</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="surfaceTabContent">
+                            <div class="tab-pane fade show active" id="grass" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Win/Loss Record</h5>
+                                        <p>8 Wins / 2 Losses (80%)</p>
+                                        <div class="progress mb-3">
+                                            <div class="progress-bar" role="progressbar" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Average Stats</h5>
+                                        <p>Aces: 5.2 per match</p>
+                                        <p>Double Faults: 2.1 per match</p>
+                                        <p>1st Serve %: 63%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="clay" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Win/Loss Record</h5>
+                                        <p>5 Wins / 3 Losses (62.5%)</p>
+                                        <div class="progress mb-3">
+                                            <div class="progress-bar" role="progressbar" style="width: 62.5%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Average Stats</h5>
+                                        <p>Aces: 3.8 per match</p>
+                                        <p>Double Faults: 3.5 per match</p>
+                                        <p>1st Serve %: 58%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="hard" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Win/Loss Record</h5>
+                                        <p>5 Wins / 1 Loss (83.3%)</p>
+                                        <div class="progress mb-3">
+                                            <div class="progress-bar" role="progressbar" style="width: 83.3%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Average Stats</h5>
+                                        <p>Aces: 4.7 per match</p>
+                                        <p>Double Faults: 2.8 per match</p>
+                                        <p>1st Serve %: 61%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Recent Matches Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i>Recent Matches
+                    </div>
+                    <div class="card-body match-history">
+                        <div class="match-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="winner"><i class="fas fa-trophy"></i> You</span>
+                                <span>6-4, 7-5</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>vs. Roger F.</span>
+                                <span><span class="court-icon court-grass"></span>Wimbledon</span>
+                            </div>
+                            <div class="text-end small">Jul 12, 2023</div>
+                        </div>
+                        <div class="match-item">
+                            <div class="d-flex justify-content-between">
+                                <span>You</span>
+                                <span>4-6, 6-7</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span class="winner"><i class="fas fa-trophy"></i> Rafael N.</span>
+                                <span><span class="court-icon court-clay"></span>Roland Garros</span>
+                            </div>
+                            <div class="text-end small">Jun 5, 2023</div>
+                        </div>
+                        <div class="match-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="winner"><i class="fas fa-trophy"></i> You</span>
+                                <span>6-3, 6-4</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>vs. Novak D.</span>
+                                <span><span class="court-icon court-hard"></span>Australian Open</span>
+                            </div>
+                            <div class="text-end small">Jan 28, 2023</div>
+                        </div>
+                        <div class="match-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="winner"><i class="fas fa-trophy"></i> You</span>
+                                <span>7-6, 6-2</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>vs. Andy M.</span>
+                                <span><span class="court-icon court-grass"></span>Queen's Club</span>
+                            </div>
+                            <div class="text-end small">Jun 18, 2023</div>
+                        </div>
+                        <div class="match-item">
+                            <div class="d-flex justify-content-between">
+                                <span>You</span>
+                                <span>5-7, 6-4, 3-6</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span class="winner"><i class="fas fa-trophy"></i> Daniil M.</span>
+                                <span><span class="court-icon court-hard"></span>US Open</span>
+                            </div>
+                            <div class="text-end small">Sep 3, 2023</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Serve Statistics Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-bullseye me-2"></i>Serve Statistics
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>First Serve Percentage</h6>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 62%"></div>
+                            </div>
+                            <small class="text-muted">62% (Tournament avg: 58%)</small>
+                        </div>
+                        <div class="mb-3">
+                            <h6>First Serve Points Won</h6>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 73%"></div>
+                            </div>
+                            <small class="text-muted">73% (Tournament avg: 68%)</small>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Second Serve Points Won</h6>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 54%"></div>
+                            </div>
+                            <small class="text-muted">54% (Tournament avg: 52%)</small>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Aces per Match</h6>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 45%"></div>
+                            </div>
+                            <small class="text-muted">4.5 (Tournament avg: 3.8)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share Button -->
+                <button class="btn share-btn w-100 mb-4">
+                    <i class="fas fa-share-alt me-2"></i>Share My Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Tournament Performance Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-trophy me-2"></i>Tournament Performance
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="tournament-card card h-100">
+                                    <div class="card-body text-center">
+                                        <h5>Wimbledon</h5>
+                                        <span class="grass-badge surface-badge">Grass</span>
+                                        <p class="mt-2">Quarterfinals</p>
+                                        <p>4-1 Record</p>
+                                        <p>80% Win Rate</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="tournament-card card h-100">
+                                    <div class="card-body text-center">
+                                        <h5>Roland Garros</h5>
+                                        <span class="clay-badge surface-badge">Clay</span>
+                                        <p class="mt-2">Round of 16</p>
+                                        <p>3-1 Record</p>
+                                        <p>75% Win Rate</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="tournament-card card h-100">
+                                    <div class="card-body text-center">
+                                        <h5>Australian Open</h5>
+                                        <span class="hard-badge surface-badge">Hard</span>
+                                        <p class="mt-2">Semifinals</p>
+                                        <p>5-1 Record</p>
+                                        <p>83% Win Rate</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="tournament-card card h-100">
+                                    <div class="card-body text-center">
+                                        <h5>US Open</h5>
+                                        <span class="hard-badge surface-badge">Hard</span>
+                                        <p class="mt-2">Round of 32</p>
+                                        <p>2-1 Record</p>
+                                        <p>66% Win Rate</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p class="mb-0">TennisTourneyPro &copy; 2023 | Tournament Management System</p>
+            <p class="mb-0 small">
+                <a href="#" class="text-white mx-2"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-white mx-2"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="text-white mx-2"><i class="fab fa-instagram"></i></a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/visualise.js') }}"></script>
+    <script>
+       
+    </script>
+</body>
+</html>

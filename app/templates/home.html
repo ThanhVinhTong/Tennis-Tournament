@@ -68,6 +68,69 @@
     </div>
     <!-- Carousel End -->
 
+    <!-- Tennis Class Start -->
+    <div class="container tennis-class mb-5">
+        <div class="row px-3">
+            <div class="col-md-6 p-0">
+                <div class="tennis-class-box d-flex flex-column align-items-end justify-content-center text-right text-white py-5 px-5"
+                    style=" background-color: #74bb26;">
+                    <i class="flaticon-six-pack"></i>
+                    <h3 class="display-4 mb-3 text-white font-weight-bold">📅 Upcoming Matches</h3>
+                </div>
+            </div>
+            <div class="col-md-6 p-0">
+                <div
+                    class="tennis-class-box d-flex flex-column align-items-start justify-content-center bg-secondary text-left text-white py-5 px-5">
+                    <i class="flaticon-bodybuilding"></i>
+                    <h3 class="display-4 mb-3 text-white font-weight-bold">Plan Your Matches</h3>
+                    <p>
+                        Stay organized and never miss a tournament! This calendar view helps you track key events, set
+                        reminders, and get a quick glance of upcoming matches in your area or club.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tennis Class End -->
+
+    <!-- Tennis Match Timetable Start -->
+    <div class="container tennis-feature py-5">
+        <div class="d-flex flex-column text-center mb-5">
+            <h4 class="font-weight-bold" style="color: #425701">Upcoming Matches</h4>
+            <!-- Add month selection buttons -->
+            <div class="btn-group mb-3">
+                <button class="btn btn-success active" id="btn-april">April</button>
+                <button class="btn btn-success" id="btn-may">May</button>
+            </div>
+        </div>
+
+        <div class="tab-class">
+            <div class="tab-content">
+                <div id="class-all" class="container tab-pane p-0 active">
+                    <!-- Tennis Match Timetable -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-lg m-0">
+                            <thead class="bg-success text-white text-center">
+                                <tr>
+                                    <th>Sun</th>
+                                    <th>Mon</th>
+                                    <th>Tue</th>
+                                    <th>Wed</th>
+                                    <th>Thu</th>
+                                    <th>Fri</th>
+                                    <th>Sat</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center" id="calendar-body">
+                            </tbody>
+                        </table>
+                    </div>             
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tennis Match Timetable End -->
+
     <!-- Footer -->
     <footer class="footer mt-5">
         <div class="container">

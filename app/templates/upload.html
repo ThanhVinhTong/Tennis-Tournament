@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Data | Tennis Tournament</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Global styles from Visualise and Share -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/visualise.css') }}">
+  <!-- Upload-specific styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('main.home') }}">
+        <i class="fas fa-tennis-ball me-2"></i>Tennis Tournament
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='main.home' %}active{% endif %}" href="{{ url_for('main.home') }}">
+              <i class="fas fa-home"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='main.upload' %}active{% endif %}" href="{{ url_for('main.upload') }}">
+              <i class="fas fa-upload"></i> Upload
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='main.visualise' %}active{% endif %}" href="{{ url_for('main.visualise') }}">
+              <i class="fas fa-chart-bar"></i> Analytics
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='main.share' %}active{% endif %}" href="{{ url_for('main.share') }}">
+              <i class="fas fa-share-alt"></i> Share
+            </a>
+          </li>
+        </ul>
+        <div class="d-flex">
+          <span class="navbar-text me-3"><i class="fas fa-user"></i> John Doe</span>
+          <button class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <div class="row mb-4 text-center">
+      <div class="col">
+        <h2><i class="fas fa-upload me-2"></i> Upload Data</h2>
+        <p class="text-muted">Upload a single match or a CSV file with multiple matches</p>
+      </div>
+    </div>
+    <div class="row g-4">
+      <!-- Single Match Upload -->
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5 class="mb-4"><i class="fas fa-tennis-ball me-2"></i>Single Match</h5>
+          <form id="single-upload-form">
+            <div class="mb-3">
+              <label for="match-date" class="form-label">Match Date</label>
+              <input type="date" class="form-control" id="match-date" name="date">
+            </div>
+            <div class="mb-3">
+              <label for="match-title" class="form-label">Match Title</label>
+              <input type="text" class="form-control" id="match-title" name="title" placeholder="Quarter Final">
+            </div>
+            <div class="mb-3">
+              <label for="match-players" class="form-label">Players</label>
+              <input type="text" class="form-control" id="match-players" name="players" placeholder="Player A vs Player B">
+            </div>
+            <div class="row mb-3">
+              <div class="col">
+                <label for="match-time" class="form-label">Time</label>
+                <input type="time" class="form-control" id="match-time" name="time">
+              </div>
+              <div class="col">
+                <label for="match-court" class="form-label">Court</label>
+                <input type="text" class="form-control" id="match-court" name="court" placeholder="Center Court">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success w-100 btn-upload">Upload Match</button>
+          </form>
+        </div>
+      </div>
+      <!-- CSV File Upload -->
+      <div class="col-md-6">
+        <div class="section-card">
+          <h5 class="mb-4"><i class="fas fa-file-csv me-2"></i>CSV Batch Upload</h5>
+          <form id="bulk-upload-form" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="csv-file" class="form-label">Select CSV File</label>
+              <input type="file" class="form-control" id="csv-file" name="csv-file" accept=".csv">
+            </div>
+            
+            <button type="submit" class="btn btn-success w-100 btn-upload">Upload CSV</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer mt-5">
+    <div class="container text-center py-4">
+      <p class="mb-0">&copy; 2025 Group 60. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

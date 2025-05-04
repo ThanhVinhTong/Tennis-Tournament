@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Enter Results{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Manual Entry -->
+  <div class="col-lg-6 grid-margin stretch-card">
+    <div class="card"><div class="card-body">
+      <h4 class="card-title">Manual Entry</h4>
+      <form method="post"
+            action="{{ url_for('main.upload') }}"
+            enctype="multipart/form-data">
+        {{ manual_form.hidden_tag() }}
+
+        <div class="mb-3">
+          {{ manual_form.tournament_name.label(class="form-label") }}
+          {{ manual_form.tournament_name(class="form-control", placeholder="Enter competition name") }}
+          {% for e in manual_form.tournament_name.errors %}
+            <div class="text-danger">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          {{ manual_form.player1.label(class="form-label") }}
+          {{ manual_form.player1(class="form-select") }}
+          {% for e in manual_form.player1.errors %}
+            <div class="text-danger">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          {{ manual_form.player2.label(class="form-label") }}
+          {{ manual_form.player2(class="form-select") }}
+          {% for e in manual_form.player2.errors %}
+            <div class="text-danger">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <label class="form-label">Score</label>
+        <div class="input-group mb-3">
+          {{ manual_form.score1(class="form-control", type="number", min="0") }}
+          <span class="input-group-text">–</span>
+          {{ manual_form.score2(class="form-control", type="number", min="0") }}
+        </div>
+        {% for e in manual_form.score1.errors %}
+          <div class="text-danger">{{ e }}</div>
+        {% endfor %}
+        {% for e in manual_form.score2.errors %}
+          <div class="text-danger">{{ e }}</div>
+        {% endfor %}
+
+        {{ manual_form.winner }} {# hidden field #}
+
+        <div class="mb-3">
+          {{ manual_form.match_date.label(class="form-label") }}
+          {{ manual_form.match_date(
+               class="form-control",
+               type="date",
+               max=today
+             ) }}
+          {% for e in manual_form.match_date.errors %}
+            <div class="text-danger">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-4">
+          {{ manual_form.submit_manual(class="btn btn-primary w-100") }}
+        </div>
+      </form>
+    </div></div>
+  </div>
+
+  <!-- CSV Batch Upload -->
+  <div class="col-md-6">
+    <div class="card mb-4"><div class="card-header bg-primary text-white">
+      Batch CSV Upload
+    </div><div class="card-body">
+      <form method="post"
+            action="{{ url_for('main.upload') }}"
+            enctype="multipart/form-data">
+        {{ upload_form.hidden_tag() }}
+        <div class="mb-3">
+          {{ upload_form.csv_file.label }}
+          {{ upload_form.csv_file(class="form-control-file") }}
+          {% for e in upload_form.csv_file.errors %}
+            <div class="text-danger">{{ e }}</div>
+          {% endfor %}
+        </div>
+        {{ upload_form.submit_csv(class="btn btn-primary") }}
+      </form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

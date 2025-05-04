@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Preview CSV{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Preview CSV Upload</h4>
+        {% if errors %}
+          <div class="alert alert-warning">
+            <strong>Rows with errors:</strong>
+            {% for idx, cols in errors %}
+              <div>Line {{ idx }} missing: {{ cols|join(', ') }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <form method="post" action="{{ url_for('main.upload_confirm') }}">
+          <input type="hidden" name="rows_json" value="{{ rows_json }}">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  {% for h in rows[0].keys() %}<th>{{ h|capitalize }}</th>{% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in rows %}
+                <tr>
+                  <td><input type="checkbox" name="selected" value="{{ loop.index0 }}" checked></td>
+                  {% for v in row.values() %}<td>{{ v }}</td>{% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button name="action" value="all" class="btn btn-success">Import All</button>
+          <button name="action" value="selected" class="btn btn-primary">Import Selected</button>
+          <a href="{{ url_for('main.upload') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

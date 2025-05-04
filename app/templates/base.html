@@ -121,6 +121,12 @@
             <i data-feather="file"></i><span>Enter Results</span>
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint=='main.view_stats' %}active{% endif %}"
+             href="{{ url_for('main.view_stats') }}">
+            <i data-feather="bar-chart-2"></i><span>View Statistics</span>
+          </a>
+        </li>
         
         
         

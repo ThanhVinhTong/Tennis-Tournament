@@ -94,7 +94,8 @@ def upload():
         db.session.add(m)
         db.session.commit()
         flash('✅ Single record submitted successfully!', 'success')
-        return redirect(url_for('main.upload'))
+        return redirect(url_for('main.view_stats'))
+
 
     # —— GET or verification failure ——
     return render_template(
@@ -130,9 +131,131 @@ def upload_confirm():
             continue
     db.session.commit()
     flash(f'✅ Successfully imported {count} records.', 'success')
-    return redirect(url_for('main.upload'))
+    return redirect(url_for('main.view_stats'))
 
 
 
 
 
+
+
+
+
+
+
+
+
+@bp.route('/view_stats')
+@login_required
+def view_stats():
+    # —— 1. 个人（own + 私密分享） —— 
+    own = (MatchResult.query
+           .filter_by(user_id=current_user.id)
+           .order_by(desc(MatchResult.match_date))
+           .all())
+    private_shared = [
+        sr.match_result for sr in
+        ShareResult.query
+                   .filter_by(recipient_id=current_user.id, is_public=False)
+                   .order_by(desc(ShareResult.timestamp))
+                   .all()
+    ]
+    personal = sorted(own + private_shared,
+                      key=lambda r: r.match_date, reverse=True)
+
+    total = len(personal)
+    wins  = sum(1 for r in personal if r.winner == current_user.username)
+    losses = total - wins
+    stats = {
+        'total_matches':  total,
+        'win_count':      wins,
+        'win_percentage': f"{(wins/total*100):.1f}%" if total else "0.0%",
+        'win_loss_ratio': f"{(wins/losses):.2f}" if losses else f"{wins:.2f}"
+    }
+    rev = list(reversed(personal))
+    chart_labels = [r.match_date.strftime('%b %Y') for r in rev]
+    chart_won    = [1 if r.winner == current_user.username else 0 for r in rev]
+    chart_lost   = [1 if r.winner != current_user.username else 0 for r in rev]
+    recent5      = personal[:5]
+
+    # —— 2. 全局公开分享统计 —— 
+    # 2.1 按月统计公开分享次数（Bar Chart）
+    monthly = (
+        db.session.query(
+            func.strftime('%Y-%m', MatchResult.match_date).label('month'),
+            func.count(MatchResult.id).label('cnt')
+        )
+        .join(ShareResult, ShareResult.match_result_id == MatchResult.id)
+        .filter(ShareResult.is_public == True)
+        .group_by('month')
+        .order_by('month')
+        .all()
+    )
+    public_months = [m.month for m in monthly]
+    public_counts = [m.cnt   for m in monthly]
+
+    # 2.2 找出 Top N 的热门获胜者（Bar & Pie）
+    winners = (
+        db.session.query(
+            MatchResult.winner, func.count(MatchResult.id).label('cnt')
+        )
+        .join(ShareResult, ShareResult.match_result_id == MatchResult.id)
+        .filter(ShareResult.is_public == True)
+        .group_by(MatchResult.winner)
+        .order_by(desc(func.count(MatchResult.id)))
+        .limit(5)
+        .all()
+    )
+    public_labels = [w.winner for w in winners]
+    public_wins   = [w.cnt    for w in winners]
+
+    # 2.3 热门获胜者的月度胜场数趋势（Line Chart with regression 探索）
+    #    先拿出所有 (month, winner, cnt) 记录
+    monthly_wins_all = (
+        db.session.query(
+            func.strftime('%Y-%m', MatchResult.match_date).label('month'),
+            MatchResult.winner,
+            func.count(MatchResult.id).label('cnt')
+        )
+        .join(ShareResult, ShareResult.match_result_id == MatchResult.id)
+        .filter(ShareResult.is_public == True,
+                MatchResult.winner.in_(public_labels))
+        .group_by('month', MatchResult.winner)
+        .order_by('month')
+        .all()
+    )
+    # 构造字典：{ winner: [cnt_for_month_i,...] }
+    monthly_trends = {w: [0] * len(public_months) for w in public_labels}
+    for rec in monthly_wins_all:
+        month, winner, cnt = rec
+        idx = public_months.index(month)
+        monthly_trends[winner][idx] = cnt
+    # —— 3. 全站用户排名 —— 
+    user_win_counts = (
+        db.session.query(MatchResult.winner, func.count(MatchResult.id).label('win_count'))
+        .group_by(MatchResult.winner)
+        .order_by(desc('win_count'))
+        .all()
+    )
+    global_ranking = [{ 'username': u[0], 'win_count': u[1] } for u in user_win_counts]
+    user_rank = next((i + 1 for i, u in enumerate(global_ranking) if u['username'] == current_user.username), None)
+    
+
+    return render_template(
+        'main/view_stats.html',
+        # 个人部分
+        stats=stats,
+        chart_labels=chart_labels,
+        chart_won=chart_won,
+        chart_lost=chart_lost,
+        recent_results=recent5,
+        user_rank=user_rank,
+        global_ranking=global_ranking,
+        # 公共部分
+        public_months=public_months,
+        public_counts=public_counts,
+        public_labels=public_labels,
+        public_wins=public_wins,
+        monthly_trends=monthly_trends
+        
+    )

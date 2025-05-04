@@ -35,9 +35,15 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint=='main.input_result' %}active{% endif %}"
+                        <a class="nav-link {% if request.endpoint=='main.upload' %}active{% endif %}"
                            href="{{ url_for('main.upload') }}">
                             Upload Data
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint=='main.view_stats' %}active{% endif %}"
+                           href="{{ url_for('main.view_stats') }}">
+                            Visualise Data
                         </a>
                     </li>
                     

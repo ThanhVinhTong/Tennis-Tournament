@@ -11,3 +11,4 @@ Flask-WTF
 Flask-Login
 Flask-Migrate
 Flask-SQLAlchemy
+email-validator

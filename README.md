@@ -55,25 +55,39 @@ Built with:
    ```
 2. **Run the Flask server**
    ```bash
+   flask db upgrade
    flask run
    ```
 3. **Access the app** Open your browser and navigate to `http://127.0.0.1:5000/`.
 
 ## Project Structure
 
-```
 CITS5505-Group-60-project/
 ├── app/
-│   ├── __init__.py       # Flask app factory
-│   ├── routes.py         # URL routes (views)
-│   ├── templates/        # HTML Jinja2 templates
-│   └── static/           # CSS, JS, images
-│       ├── css/
-│       ├── js/
-│       └── images/
-├── run.py                # Application entry point
-├── requirements.txt      # Python package dependencies
-└── README.md             # Project documentation
-```
+│ ├── auth/ # Authentication blueprint (registration, login)
+│ │ ├── init.py
+│ │ ├── forms.py
+│ │ └── routes.py
+│ ├── errors/ # Error handling blueprint (404, 500 pages)
+│ │ ├── init.py
+│ │ └── handlers.py
+│ ├── main/ # Main function blueprint
+│ │ ├── init.py
+│ │ ├── forms.py
+│ │ └── routes.py
+│ ├── static/ # Static Resources
+│ │ ├── css/
+│ │ ├── js/
+│ │ └── images/
+│ ├── templates/ #Jinja2 Templates
+│ ├── init.py # Application create_app()
+│ └── models.py # SQLAlchemy Model
+│
+├── migrations/ # Flask-Migrate migration script
+├── app.db # SQLite database files
+├── config.py # Configuration
+├── requirements.txt # Python Dependencies
+├── run.py # Application entry
+└── README.md # 
 
 ## Running Tests

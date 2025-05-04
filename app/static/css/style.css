@@ -1,0 +1,268 @@
+
+
+/* —— Theme color —— */
+:root {
+  --sa-primary:    #4e73df;
+  --sa-primary-50: #f0f3ff;
+  --sa-grey:       #858796;
+  --sa-light:      #f8f9fc;
+}
+
+/* —— Global & Layout —— */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-color: var(--sa-light);
+  padding-left: 240px;
+  padding-top: 64px;
+  overflow-x: hidden;
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.sidebar-collapsed {
+  padding-left: 56px;
+}
+
+/* —— Sidebar —— */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 240px;
+  min-width: 56px;
+  background-color: var(--sa-primary);
+  padding-top: 1rem;
+  z-index: 2000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .profile-area {
+  text-align: center;
+  padding: 1rem 0.5rem;
+  background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nODBweCcgaGVpZ2h0PSc4MHB4JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPjxyZWN0IHdpZHRoPSc4MCcgaGVpZ2h0PSc4MCcgZmlsbD0nI2VhZWFlYScvPjwvc3ZnPg==") center/cover no-repeat;
+}
+
+.sidebar .profile-area img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+}
+
+.sidebar .profile-area .profile-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 0.5rem;
+}
+
+.sidebar .profile-area .text-secondary {
+  display: block;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.8);
+  margin-top: 0.25rem;
+}
+
+.sidebar .nav {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar .nav-item + .nav-item {
+  margin-top: 0.25rem;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.2s;
+  min-height: 44px;
+}
+
+.sidebar .nav-link i {
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar.collapsed .nav-link i {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .nav-link span {
+  display: none;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background-color: var(--sa-primary-50);
+  color: var(--sa-primary);
+}
+
+/* —— Top navigation —— */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  height: 64px;
+  background: #fff;
+  border-bottom: 1px solid var(--sa-grey);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  z-index: 2001;
+}
+
+body.sidebar-collapsed .navbar {
+  left: 56px;
+}
+
+.navbar .navbar-brand img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+.navbar .btn-logout {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  transform: translateZ(0);
+}
+
+.navbar .btn-logout i {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* —— Main content area —— */
+.main-content {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* —— Card —— */
+.card {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(58,59,69,0.15);
+  margin-bottom: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* -- Form & Button -- */
+.form-label {
+  font-weight: 500;
+}
+
+.form-control {
+  border-radius: 0.35rem;
+  border: 1px solid #d1d3e2;
+}
+
+.btn-primary {
+  background-color: var(--sa-primary);
+  border-color: var(--sa-primary);
+}
+
+.btn-primary:hover {
+  background-color: #2e59d9;
+  border-color: #2653cc;
+}
+
+/* —— Chart —— */
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* —— Footer —— */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 240px;    
+  right: 0;
+  background: #fff;
+  border-top: 1px solid var(--sa-grey);
+  padding: 1rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--sa-grey);
+  z-index: 2001;
+}
+
+body.sidebar-collapsed .footer {
+  left: 56px;    
+}
+
+
+/* —— Responsive —— */
+@media (max-width: 768px) {
+  .sidebar {
+      width: 56px;
+  }
+  body {
+      padding-left: 56px;
+  }
+  .navbar {
+      left: 56px;
+  }
+  .footer {
+      margin-left: 56px;
+  }
+}
+
+
+button:active,
+button:focus {
+  transform: translateZ(0) !important;
+  outline: none !important;
+}
+
+/* —— Batch CSV Upload Header Override —— */
+.card-header.bg-primary {
+  /* switch from Bootstrap blue to your grey */
+  background-color: var(--sa-grey) !important;
+  border-color: var(--sa-grey) !important;
+  color: #fff;
+}

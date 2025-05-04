@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Internal server error (500)</h1>
+    <p>Sorry, an internal server error has occurred. Please try again later.</p>
+    <a href="{{ url_for('main.upload') }}" class="btn btn-primary">Back to Home</a>
+</div>
+{% endblock %}

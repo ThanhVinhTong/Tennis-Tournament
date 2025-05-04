@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Match Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="fw-bold"><i class="fas fa-chart-bar me-2"></i>Match Analytics Dashboard</h2>
+      <p class="text-muted">Your personal stats and global public shares</p>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row mb-5">
+    {% for key,label in [
+        ('total_matches','Matches Played'),
+        ('win_count','Matches Won'),
+        ('win_percentage','Win %'),
+        ('win_loss_ratio','W/L Ratio')
+      ] %}
+    <div class="col-sm-6 col-md-3 mb-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <p class="text-muted mb-2 small">{{ label }}</p>
+          <h3 class="fw-bold mb-0">{{ stats[key] }}</h3>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 用户排名信息 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-light shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="card-title mb-1">Your Global Ranking</h5>
+            <p class="card-text mb-0">You are currently ranked <strong>#{{ user_rank }}</strong> by total wins.</p>
+          </div>
+          <div>
+            <a href="#global-ranking-table" class="btn btn-sm btn-outline-primary">View Leaderboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 排行榜表格 -->
+  <div class="row mb-4" id="global-ranking-table">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          <i class="fas fa-trophy me-2"></i>Global Leaderboard (Top Players by Wins)
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-striped">
+            <thead><tr><th>Rank</th><th>Username</th><th>Wins</th></tr></thead>
+            <tbody>
+              {% for u in global_ranking %}
+              <tr>
+                <td>#{{ loop.index }}</td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.win_count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Performance & Public Shares -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-success text-white">
+          <i class="fas fa-chart-line me-2"></i>Performance Trends
+        </div>
+        <div class="card-body">
+          <canvas id="personalChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-share-alt me-2"></i>Monthly Public Shares
+        </div>
+        <div class="card-body">
+          <canvas id="publicCountChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Winners Monthly Trend -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <i class="fas fa-chart-line me-2"></i>Top Winners Monthly Trend
+        </div>
+        <div class="card-body">
+          <canvas id="publicTrendChart" height="150"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Winners Totals (Bar & Pie) -->
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-warning text-dark">
+          <i class="fas fa-chart-bar me-2"></i>Top Winners Total Wins
+        </div>
+        <div class="card-body">
+          <canvas id="publicWinsBarChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-danger text-white">
+          <i class="fas fa-chart-pie me-2"></i>Top Winners Share Distribution
+        </div>
+        <div class="card-body">
+          <canvas id="publicWinsPieChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Personal performance line chart
+    new Chart(
+      document.getElementById('personalChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: {{ chart_labels|tojson }},
+          datasets: [
+            { label: 'Won',  data: {{ chart_won|tojson }},  fill: true, tension: 0.3, borderColor: 'green' },
+            { label: 'Lost', data: {{ chart_lost|tojson }}, fill: true, tension: 0.3, borderColor: 'red' }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true } }
+        }
+      }
+    );
+
+    // Public shares bar chart
+    new Chart(
+      document.getElementById('publicCountChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: {{ public_months|tojson }},
+          datasets: [{
+            label: 'Public Shares',
+            data: {{ public_counts|tojson }},
+            backgroundColor: 'rgba(54,162,235,0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } }
+        }
+      }
+    );
+
+    // Top winners monthly trend (multi-line)
+    const trendDatasets = [];
+    {% for winner in public_labels %}
+      trendDatasets.push({
+        label: '{{ winner }}',
+        data: {{ monthly_trends[winner]|tojson }},
+        fill: false,
+        tension: 0.3
+      });
+    {% endfor %}
+    new Chart(
+      document.getElementById('publicTrendChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: {{ public_months|tojson }},
+          datasets: trendDatasets
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { beginAtZero: true } }
+        }
+      }
+    );
+
+    // Top winners total wins bar chart
+    new Chart(
+      document.getElementById('publicWinsBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: {{ public_labels|tojson }},
+          datasets: [{
+            label: 'Total Wins',
+            data: {{ public_wins|tojson }},
+            backgroundColor: 'rgba(255,159,64,0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } }
+        }
+      }
+    );
+
+    // Top winners share distribution pie chart
+    new Chart(
+      document.getElementById('publicWinsPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: {{ public_labels|tojson }},
+          datasets: [{
+            data: {{ public_wins|tojson }},
+            backgroundColor: [
+              '#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'
+            ]
+          }]
+        },
+        options: { responsive: true }
+      }
+    );
+  </script>
+{% endblock %}

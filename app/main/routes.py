@@ -354,3 +354,127 @@ def api_matches_by_date():
     
     
     #share part
+@bp.route('/share', methods=['GET', 'POST'])
+@login_required
+def share():
+    if request.method == 'GET':
+        # 1) The current user's own game list
+        match_results = (
+            MatchResult.query
+            .filter_by(user_id=current_user.id)
+            .order_by(desc(MatchResult.match_date))
+            .all()
+        )
+        # 2) The current user's sharing history (both public and private)
+        share_history = (
+            ShareResult.query
+            .filter_by(sender_id=current_user.id)
+            .order_by(desc(ShareResult.timestamp))
+            .all()
+        )
+        # 3) All other users → Private sharing pulls down and the page is rendered
+        all_users = User.query.filter(User.id != current_user.id).order_by(User.username).all()
+        all_users_data = [{'id': u.id, 'username': u.username} for u in all_users]
+ 
+        # 4) Construct a private sharing mapping
+        shared_map = {}
+        private_recs = ShareResult.query.filter_by(
+            sender_id=current_user.id, is_public=False
+        ).all()
+        for s in private_recs:
+            shared_map.setdefault(s.match_result_id, set()).add(s.recipient_id)
+        # Convert to list for JSON serialization
+        shared_map = {mid: list(rids) for mid, rids in shared_map.items()}
+ 
+        # 5) Construct a list of publicly shared competition IDs
+        public_recs = ShareResult.query.filter_by(
+            sender_id=current_user.id, is_public=True
+        ).all()
+        public_shared_ids = [s.match_result_id for s in public_recs]
+ 
+        # Rendering Template
+        return render_template(
+            'main/share.html',
+            match_results=match_results,
+            share_history=share_history,
+            all_users_data=all_users_data,
+            shared_map=shared_map,
+            public_shared_ids=public_shared_ids,
+            current_username=current_user.username
+        )
+ 
+    # —— POST (AJAX) ——
+    data = request.get_json() or {}
+    match_ids = list(map(int, data.get('match_ids', [])))
+    usernames = data.get('usernames', [])
+    is_public = data.get('public', False)
+ 
+    if not match_ids:
+        return jsonify({'message': 'No matches selected.'}), 400
+ 
+    # Public sharing: only insert those that have not been made public before
+    if is_public:
+        added = 0
+        for mid in match_ids:
+            exists = ShareResult.query.filter_by(
+                match_result_id=mid,
+                sender_id=current_user.id,
+                is_public=True
+            ).first()
+            if not exists:
+                db.session.add(ShareResult(
+                    match_result_id=mid,
+                    sender_id=current_user.id,
+                    is_public=True
+                ))
+                added += 1
+        db.session.commit()
+        return jsonify({'result': 'shared_public'}), 200
+ 
+    # Private sharing: skip yourself and shared groups
+    if not usernames:
+        return jsonify({'message': 'No recipients selected.'}), 400
+ 
+    recipients = User.query.filter(User.username.in_(usernames)).all()
+    added = 0
+    for u in recipients:
+        if u.id == current_user.id:
+            continue
+        for mid in match_ids:
+            exists = ShareResult.query.filter_by(
+                match_result_id=mid,
+                sender_id=current_user.id,
+                recipient_id=u.id,
+                is_public=False
+            ).first()
+            if not exists:
+                db.session.add(ShareResult(
+                    match_result_id=mid,
+                    sender_id=current_user.id,
+                    recipient_id=u.id,
+                    is_public=False
+                ))
+                added += 1
+ 
+    db.session.commit()
+    if added:
+        return jsonify({'result': 'shared_private'}), 200
+    else:
+        return jsonify({'message': 'Nothing new to share.'}), 400
+ 
+ 
+ 
+    
+    
+@bp.route('/unshare/<int:share_id>', methods=['POST'])
+@login_required
+def unshare(share_id):
+    sr = ShareResult.query.get_or_404(share_id)
+    if sr.sender_id != current_user.id:
+        abort(403)
+ 
+    db.session.delete(sr)
+    db.session.commit()
+    flash('Share record removed.', 'info')
+    return redirect(url_for('main.share'))
+ 

@@ -48,6 +48,13 @@
                     </li>
                     <!-- SHARE PART -->
 
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint=='main.share' %}active{% endif %}"
+                           href="{{ url_for('main.share') }}">
+                            Share Data
+                        </a>
+                    </li>
+
                     
                 </ul>
 

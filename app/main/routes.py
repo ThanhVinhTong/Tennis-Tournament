@@ -14,14 +14,6 @@ from app.main import bp
 from app.main.forms import MatchResultForm, UploadForm
 import csv, io, json
 
-
-@bp.route('/home')
-def home():
-    """
-    Introductory landing page, public.
-    """
-    return render_template('main/home.html')
-
 @bp.route('/')
 def index():
     """
@@ -31,6 +23,15 @@ def index():
         return redirect(url_for('main.upload'))
     return redirect(url_for('auth.login'))
 
+@bp.route('/home')
+def home():
+    """
+    Introductory landing page, public.
+    """
+    return render_template('main/home.html')
+
+
+# upload part
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -139,16 +140,11 @@ def upload_confirm():
 
 
 
-
-
-
-
-
-
+# view_stats part
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-    # —— 1. 个人（own + 私密分享） —— 
+    # —— 1. Personal (own + private sharing) ——
     own = (MatchResult.query
            .filter_by(user_id=current_user.id)
            .order_by(desc(MatchResult.match_date))
@@ -178,8 +174,8 @@ def view_stats():
     chart_lost   = [1 if r.winner != current_user.username else 0 for r in rev]
     recent5      = personal[:5]
 
-    # —— 2. 全局公开分享统计 —— 
-    # 2.1 按月统计公开分享次数（Bar Chart）
+    # —— 2. Global public sharing statistics ——
+    # Count the number of public shares by month (Bar Chart)
     monthly = (
         db.session.query(
             func.strftime('%Y-%m', MatchResult.match_date).label('month'),
@@ -194,7 +190,7 @@ def view_stats():
     public_months = [m.month for m in monthly]
     public_counts = [m.cnt   for m in monthly]
 
-    # 2.2 找出 Top N 的热门获胜者（Bar & Pie）
+    # Find the Top N popular winners (Bar & Pie)
     winners = (
         db.session.query(
             MatchResult.winner, func.count(MatchResult.id).label('cnt')
@@ -209,8 +205,8 @@ def view_stats():
     public_labels = [w.winner for w in winners]
     public_wins   = [w.cnt    for w in winners]
 
-    # 2.3 热门获胜者的月度胜场数趋势（Line Chart with regression 探索）
-    #    先拿出所有 (month, winner, cnt) 记录
+    # Trend of monthly wins of popular winners (Line Chart with regression exploration)
+    # First take out all (month, winner, cnt) records
     monthly_wins_all = (
         db.session.query(
             func.strftime('%Y-%m', MatchResult.match_date).label('month'),
@@ -224,13 +220,13 @@ def view_stats():
         .order_by('month')
         .all()
     )
-    # 构造字典：{ winner: [cnt_for_month_i,...] }
+    # Construct dictionary
     monthly_trends = {w: [0] * len(public_months) for w in public_labels}
     for rec in monthly_wins_all:
         month, winner, cnt = rec
         idx = public_months.index(month)
         monthly_trends[winner][idx] = cnt
-    # —— 3. 全站用户排名 —— 
+    # —— 3. Site-wide user ranking ——
     user_win_counts = (
         db.session.query(MatchResult.winner, func.count(MatchResult.id).label('win_count'))
         .group_by(MatchResult.winner)
@@ -243,7 +239,7 @@ def view_stats():
 
     return render_template(
         'main/view_stats.html',
-        # 个人部分
+        # Private Section
         stats=stats,
         chart_labels=chart_labels,
         chart_won=chart_won,
@@ -251,7 +247,7 @@ def view_stats():
         recent_results=recent5,
         user_rank=user_rank,
         global_ranking=global_ranking,
-        # 公共部分
+        # Public part
         public_months=public_months,
         public_counts=public_counts,
         public_labels=public_labels,
@@ -259,3 +255,102 @@ def view_stats():
         monthly_trends=monthly_trends
         
     )
+
+
+
+
+
+#received_results part
+
+@bp.route('/received_results')
+@login_required
+def received_results():
+    # Private sharing: others send to the current user
+    private_ids = (
+        db.session.query(ShareResult.match_result_id)
+        .filter(ShareResult.recipient_id == current_user.id, ShareResult.is_public == False)
+        .subquery()
+    )
+    private_matches = (
+        MatchResult.query
+        .filter(MatchResult.id.in_(private_ids))
+        .order_by(MatchResult.match_date.desc())
+        .all()
+    )
+
+    # Public sharing: shared by everyone
+    public_ids = (
+        db.session.query(ShareResult.match_result_id)
+        .filter(ShareResult.is_public == True)
+        .subquery()
+    )
+    public_matches = (
+        MatchResult.query
+        .filter(MatchResult.id.in_(public_ids))
+        .order_by(MatchResult.match_date.desc())
+        .all()
+    )
+
+    return render_template(
+        'main/received_results.html',
+        private_matches=private_matches,
+        public_matches=public_matches
+    )
+
+@bp.route('/api/users')
+@login_required
+def api_users():
+    """
+    Return list of all usernames for share dropdown.
+    """
+    users = User.query.with_entities(User.username).order_by(User.username).all()
+    return jsonify([u[0] for u in users])
+
+@bp.route('/api/match_dates')
+@login_required
+def api_match_dates():
+    """
+    Return list of distinct match_date strings for this user.
+    """
+    dates = (
+        db.session.query(func.date(MatchResult.match_date))
+                  .filter_by(user_id=current_user.id)
+                  .distinct()
+                  .order_by(desc(MatchResult.match_date))
+                  .all()
+    )
+    return jsonify([d[0].strftime('%Y-%m-%d') for d in dates])
+
+@bp.route('/api/matches_by_date')
+@login_required
+def api_matches_by_date():
+    """
+    Given ?date=YYYY-MM-DD, return JSON list of this user's matches on that date.
+    """
+    date_str = request.args.get('date')
+    if not date_str:
+        return jsonify([])
+    dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+    matches = (
+        MatchResult.query
+                   .filter_by(user_id=current_user.id)
+                   .filter(func.date(MatchResult.match_date)==dt)
+                   .order_by(desc(MatchResult.match_date))
+                   .all()
+    )
+    return jsonify([
+        {'id': m.id, 'title': f'{m.player1} vs {m.player2} ({m.score})'}
+        for m in matches
+    ])
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #share part

@@ -14,15 +14,6 @@ from app.main import bp
 from app.main.forms import MatchResultForm, UploadForm
 import csv, io, json
 
-
-
-@bp.route('/home')
-def home():
-    """
-    Introductory landing page, public.
-    """
-    return render_template('main/home.html')
-
 @bp.route('/')
 def index():
     """
@@ -32,6 +23,15 @@ def index():
         return redirect(url_for('main.upload'))
     return redirect(url_for('auth.login'))
 
+@bp.route('/home')
+def home():
+    """
+    Introductory landing page, public.
+    """
+    return render_template('main/home.html')
+
+
+# upload part
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -140,12 +140,7 @@ def upload_confirm():
 
 
 
-
-
-
-
-
-
+# view_stats part
 @bp.route('/view_stats')
 @login_required
 def view_stats():
@@ -265,10 +260,7 @@ def view_stats():
 
 
 
-
-
-
-
+#received_results part
 
 @bp.route('/received_results')
 @login_required
@@ -352,3 +344,13 @@ def api_matches_by_date():
     ])
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #share part

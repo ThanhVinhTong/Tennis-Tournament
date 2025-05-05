@@ -127,6 +127,16 @@
             <i data-feather="bar-chart-2"></i><span>View Statistics</span>
           </a>
         </li>
+
+        <!-- SHARE PART -->
+
+
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint=='main.received_results' %}active{% endif %}"
+             href="{{ url_for('main.received_results') }}">
+            <i data-feather="inbox"></i><span>Received Data</span>
+          </a>
+        </li>
         
         
         

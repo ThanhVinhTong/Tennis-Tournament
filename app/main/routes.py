@@ -15,6 +15,7 @@ from app.main.forms import MatchResultForm, UploadForm
 import csv, io, json
 
 
+
 @bp.route('/home')
 def home():
     """
@@ -148,7 +149,7 @@ def upload_confirm():
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-    # —— 1. 个人（own + 私密分享） —— 
+    # —— 1. Personal (own + private sharing) ——
     own = (MatchResult.query
            .filter_by(user_id=current_user.id)
            .order_by(desc(MatchResult.match_date))
@@ -178,8 +179,8 @@ def view_stats():
     chart_lost   = [1 if r.winner != current_user.username else 0 for r in rev]
     recent5      = personal[:5]
 
-    # —— 2. 全局公开分享统计 —— 
-    # 2.1 按月统计公开分享次数（Bar Chart）
+    # —— 2. Global public sharing statistics ——
+    # Count the number of public shares by month (Bar Chart)
     monthly = (
         db.session.query(
             func.strftime('%Y-%m', MatchResult.match_date).label('month'),
@@ -194,7 +195,7 @@ def view_stats():
     public_months = [m.month for m in monthly]
     public_counts = [m.cnt   for m in monthly]
 
-    # 2.2 找出 Top N 的热门获胜者（Bar & Pie）
+    # Find the Top N popular winners (Bar & Pie)
     winners = (
         db.session.query(
             MatchResult.winner, func.count(MatchResult.id).label('cnt')
@@ -209,8 +210,8 @@ def view_stats():
     public_labels = [w.winner for w in winners]
     public_wins   = [w.cnt    for w in winners]
 
-    # 2.3 热门获胜者的月度胜场数趋势（Line Chart with regression 探索）
-    #    先拿出所有 (month, winner, cnt) 记录
+    # Trend of monthly wins of popular winners (Line Chart with regression exploration)
+    # First take out all (month, winner, cnt) records
     monthly_wins_all = (
         db.session.query(
             func.strftime('%Y-%m', MatchResult.match_date).label('month'),
@@ -224,13 +225,13 @@ def view_stats():
         .order_by('month')
         .all()
     )
-    # 构造字典：{ winner: [cnt_for_month_i,...] }
+    # Construct dictionary
     monthly_trends = {w: [0] * len(public_months) for w in public_labels}
     for rec in monthly_wins_all:
         month, winner, cnt = rec
         idx = public_months.index(month)
         monthly_trends[winner][idx] = cnt
-    # —— 3. 全站用户排名 —— 
+    # —— 3. Site-wide user ranking ——
     user_win_counts = (
         db.session.query(MatchResult.winner, func.count(MatchResult.id).label('win_count'))
         .group_by(MatchResult.winner)
@@ -243,7 +244,7 @@ def view_stats():
 
     return render_template(
         'main/view_stats.html',
-        # 个人部分
+        # Private Section
         stats=stats,
         chart_labels=chart_labels,
         chart_won=chart_won,
@@ -251,7 +252,7 @@ def view_stats():
         recent_results=recent5,
         user_rank=user_rank,
         global_ranking=global_ranking,
-        # 公共部分
+        # Public part
         public_months=public_months,
         public_counts=public_counts,
         public_labels=public_labels,
@@ -259,3 +260,7 @@ def view_stats():
         monthly_trends=monthly_trends
         
     )
+
+
+
+

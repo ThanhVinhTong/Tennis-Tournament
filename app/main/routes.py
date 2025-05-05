@@ -264,3 +264,91 @@ def view_stats():
 
 
 
+
+
+
+
+
+
+@bp.route('/received_results')
+@login_required
+def received_results():
+    # Private sharing: others send to the current user
+    private_ids = (
+        db.session.query(ShareResult.match_result_id)
+        .filter(ShareResult.recipient_id == current_user.id, ShareResult.is_public == False)
+        .subquery()
+    )
+    private_matches = (
+        MatchResult.query
+        .filter(MatchResult.id.in_(private_ids))
+        .order_by(MatchResult.match_date.desc())
+        .all()
+    )
+
+    # Public sharing: shared by everyone
+    public_ids = (
+        db.session.query(ShareResult.match_result_id)
+        .filter(ShareResult.is_public == True)
+        .subquery()
+    )
+    public_matches = (
+        MatchResult.query
+        .filter(MatchResult.id.in_(public_ids))
+        .order_by(MatchResult.match_date.desc())
+        .all()
+    )
+
+    return render_template(
+        'main/received_results.html',
+        private_matches=private_matches,
+        public_matches=public_matches
+    )
+
+@bp.route('/api/users')
+@login_required
+def api_users():
+    """
+    Return list of all usernames for share dropdown.
+    """
+    users = User.query.with_entities(User.username).order_by(User.username).all()
+    return jsonify([u[0] for u in users])
+
+@bp.route('/api/match_dates')
+@login_required
+def api_match_dates():
+    """
+    Return list of distinct match_date strings for this user.
+    """
+    dates = (
+        db.session.query(func.date(MatchResult.match_date))
+                  .filter_by(user_id=current_user.id)
+                  .distinct()
+                  .order_by(desc(MatchResult.match_date))
+                  .all()
+    )
+    return jsonify([d[0].strftime('%Y-%m-%d') for d in dates])
+
+@bp.route('/api/matches_by_date')
+@login_required
+def api_matches_by_date():
+    """
+    Given ?date=YYYY-MM-DD, return JSON list of this user's matches on that date.
+    """
+    date_str = request.args.get('date')
+    if not date_str:
+        return jsonify([])
+    dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+    matches = (
+        MatchResult.query
+                   .filter_by(user_id=current_user.id)
+                   .filter(func.date(MatchResult.match_date)==dt)
+                   .order_by(desc(MatchResult.match_date))
+                   .all()
+    )
+    return jsonify([
+        {'id': m.id, 'title': f'{m.player1} vs {m.player2} ({m.score})'}
+        for m in matches
+    ])
+    
+    

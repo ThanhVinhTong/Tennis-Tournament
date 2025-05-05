@@ -30,3 +30,6 @@ class UploadForm(FlaskForm):
         FileAllowed(['csv'], 'Only CSV format is allowed')
     ])
     submit_csv = SubmitField('Upload CSV')
+
+class ShareForm(FlaskForm):
+    submit_share = SubmitField('Share Selected Result')

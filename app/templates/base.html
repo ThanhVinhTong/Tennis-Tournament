@@ -129,6 +129,12 @@
         </li>
 
         <!-- SHARE PART -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint=='main.share' %}active{% endif %}"
+             href="{{ url_for('main.share') }}">
+            <i data-feather="share-2"></i><span>Share Results</span>
+          </a>
+        </li>
 
 
         <li class="nav-item">

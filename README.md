@@ -60,6 +60,16 @@ Built with:
    ```
 3. **Access the app** Open your browser and navigate to `http://127.0.0.1:5000/`.
 
+
+
+## Reminder
+
+### If you need to modify the model during development, be sure to run the following command in the virtual environment after the change:
+
+flask db migrate -m "describe changes"
+flask db upgrade
+
+
 ## Project Structure
 
 CITS5505-Group-60-project/
@@ -88,6 +98,6 @@ CITS5505-Group-60-project/
 ├── config.py # Configuration
 ├── requirements.txt # Python Dependencies
 ├── run.py # Application entry
-└── README.md # 
+└── README.md #
 
 ## Running Tests

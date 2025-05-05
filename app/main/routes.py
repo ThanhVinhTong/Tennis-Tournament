@@ -77,7 +77,7 @@ def upload():
         s2 = manual_form.score2.data
 
         if s1 == s2:
-            flash('⚠️ Scores are tied; cannot determine a winner.', 'danger')
+            flash('⚠️ There is no tied game in Tennis, please check again the result', 'danger')
             return redirect(url_for('main.upload'))
 
         winner = p1 if s1 > s2 else p2

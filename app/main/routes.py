@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import func, desc
 from flask import (
-    render_template, redirect, url_for, flash,
+    abort, render_template, redirect, url_for, flash,
     request, jsonify
 )
 from flask_login import login_required, current_user
@@ -14,15 +14,6 @@ from app.main import bp
 from app.main.forms import MatchResultForm, UploadForm
 import csv, io, json
 
-@bp.route('/')
-def index():
-    """
-    Root: if logged in, go to input_result; otherwise to login.
-    """
-    if current_user.is_authenticated:
-        return redirect(url_for('main.upload'))
-    return redirect(url_for('auth.login'))
-
 @bp.route('/home')
 def home():
     """
@@ -30,6 +21,14 @@ def home():
     """
     return render_template('main/home.html')
 
+@bp.route('/')
+def index():
+    """
+    Root: if logged in, go to input_result; otherwise to login.
+    """
+    if current_user.is_authenticated:
+        return render_template('main/home.html')
+    return redirect(url_for('auth.login'))
 
 # upload part
 @bp.route('/upload', methods=['GET', 'POST'])
@@ -106,7 +105,6 @@ def upload():
         today=date.today().isoformat()
     )
 
-
 @bp.route('/upload/confirm', methods=['POST'])
 @login_required
 def upload_confirm():
@@ -133,12 +131,6 @@ def upload_confirm():
     db.session.commit()
     flash(f'✅ Successfully imported {count} records.', 'success')
     return redirect(url_for('main.view_stats'))
-
-
-
-
-
-
 
 # view_stats part
 @bp.route('/view_stats')
@@ -256,12 +248,7 @@ def view_stats():
         
     )
 
-
-
-
-
 #received_results part
-
 @bp.route('/received_results')
 @login_required
 def received_results():
@@ -343,17 +330,7 @@ def api_matches_by_date():
         for m in matches
     ])
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    #share part
+#share part
 @bp.route('/share', methods=['GET', 'POST'])
 @login_required
 def share():
@@ -461,10 +438,6 @@ def share():
         return jsonify({'result': 'shared_private'}), 200
     else:
         return jsonify({'message': 'Nothing new to share.'}), 400
- 
- 
- 
-    
     
 @bp.route('/unshare/<int:share_id>', methods=['POST'])
 @login_required

@@ -3773,6 +3773,31 @@ input[type=submit].btn-block {
     margin-left: -2px
 }
 
+.import-match-btn {
+    background: white;
+    border: 2px solid #000;
+    padding: .375rem 2.25rem .375rem .75rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 25px;
+    transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+}
+.import-match-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border: 2px solid #28a745;
+}
+.import-match-btn:active {
+    transform: scale(0.95);
+}
+
+.btn-group-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
 .dropdown-toggle-split {
     padding-right: .5625rem;
     padding-left: .5625rem

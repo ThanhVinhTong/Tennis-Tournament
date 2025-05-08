@@ -146,7 +146,7 @@ def add_match():
         logger.error(f"Error adding match for user {current_user.id}: {str(e)}")
         return jsonify({'error': f'Failed to add match: {str(e)}'}), 500
 
-# —— 球员管理 —— #
+# —— Player Management —— #
 @bp.route('/players', methods=['GET', 'POST'])
 @login_required
 def manage_players():
@@ -154,7 +154,7 @@ def manage_players():
     players = Player.query.order_by(Player.name).all()
 
     if form.validate_on_submit():
-        # 避免重名
+        # Avoid duplicate names
         if Player.query.filter_by(name=form.name.data).first():
             flash('Player already exists.', 'warning')
         else:
@@ -286,7 +286,7 @@ def upload_confirm():
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-    # —— 1. 个人 own + 私有分享 —— #
+   # —— 1. Personal own + private sharing —— #
     own = (MatchResult.query
            .filter_by(user_id=current_user.id)
            .order_by(desc(MatchResult.match_date))
@@ -302,10 +302,10 @@ def view_stats():
                       key=lambda r: r.match_date, reverse=True)
 
     total  = len(personal)
-    # 找到当前用户对应的 Player.id（假设用户名即 Player.name）
+    # Find the Player.id corresponding to the current user
     user_player = Player.query.filter_by(name=current_user.username).first()
     pid = user_player.id if user_player else None
-    # 计算胜负
+    # Calculate wins and losses
     wins   = sum(1 for r in personal if r.winner_id == pid)
     losses = total - wins
     stats  = {
@@ -315,14 +315,14 @@ def view_stats():
         'win_loss_ratio': f"{wins}:{losses}"
     }
 
-    # 折线图数据
+    # Line chart data
     rev = list(reversed(personal))
     chart_labels = [r.match_date.strftime('%b %Y') for r in rev]
     chart_won    = [1 if r.winner_id == pid else 0 for r in rev]
     chart_lost   = [1 if r.winner_id != pid else 0 for r in rev]
     recent5      = personal[:5]
 
-    # —— 2. 全局排名：按球员胜场数排序 —— #
+    # —— 2. Global ranking: sort by player wins —— #
     user_win_counts = (
         db.session.query(
             Player.name.label('username'),
@@ -340,8 +340,8 @@ def view_stats():
     user_rank = next((i+1 for i,u in enumerate(global_ranking)
                       if u['username']==current_user.username), None)
 
-    # —— 3. 球员参赛 & 胜率统计 —— #
-    # 先拿出所有参赛 ID（player1_id 或 player2_id）
+    # —— 3. Player participation & win rate statistics —— #
+    # First take out all the participation IDs
     subq_participants = (
         db.session.query(MatchResult.player1_id.label('pid'))
         .union_all(
@@ -349,7 +349,7 @@ def view_stats():
         )
         .subquery()
     )
-    # 出场次数
+    # Number of appearances
     played_stats = (
         db.session.query(
             Player.name.label('player'),
@@ -359,7 +359,7 @@ def view_stats():
         .group_by(Player.name)
         .subquery()
     )
-    # 胜场次数
+    # Number of wins
     wins_stats = (
         db.session.query(
             Player.name.label('player'),
@@ -369,7 +369,7 @@ def view_stats():
         .group_by(Player.name)
         .subquery()
     )
-    # 合并出场与胜场，算胜率
+    # Combine appearances and wins to calculate win rate
     stats_players = (
         db.session.query(
             played_stats.c.player,
@@ -469,14 +469,14 @@ def api_matches_by_date():
 @login_required
 def share():
     if request.method == 'GET':
-        # 1. 当前用户的比赛
+        # 1. Current user's games
         raw_matches = (
             MatchResult.query
                        .filter_by(user_id=current_user.id)
                        .order_by(desc(MatchResult.match_date))
                        .all()
         )
-        # 预处理：将每条 MatchResult 转成字典，附带 player1_name, player2_name, winner_name
+        # Preprocessing: Convert each MatchResult into a dictionary with player1_name, player2_name, winner_name
         share_matches = []
         for m in raw_matches:
             p1 = Player.query.get(m.player1_id)
@@ -491,17 +491,17 @@ def share():
                 'winner':     w.name if w else '-'
             })
 
-        # 2. 下拉可选用户名单
+        # 2. Pull down the list of available users
         all_users = User.query.filter(User.id != current_user.id) \
                               .order_by(User.username).all()
         all_users_data = [{'id': u.id, 'username': u.username} for u in all_users]
 
-        # 3. 已私有分享映射
+        # 3. Private shared mapping
         shared_map = defaultdict(list)
         for sr in ShareResult.query.filter_by(sender_id=current_user.id, is_public=False):
             shared_map[sr.match_result_id].append(sr.recipient_id)
 
-        # 4. 私有分享历史
+        # 4. Private sharing history
         share_history = []
         recs = (
             ShareResult.query
@@ -529,7 +529,7 @@ def share():
             share_history=share_history
         )
 
-    # POST: 私有分享
+    # POST: Private sharing
     data = request.get_json() or {}
     match_ids = data.get('match_ids', [])
     usernames = data.get('usernames', [])

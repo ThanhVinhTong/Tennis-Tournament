@@ -125,6 +125,13 @@
               <i data-feather="home"></i><span>Home</span>
             </a>
           </li>
+           <!-- Player -->
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='main.manage_players' %}active{% endif %}"
+               href="{{ url_for('main.manage_players') }}">
+              <i data-feather="users"></i><span>Manage Players</span>
+            </a>
+          </li>
 
           <!-- Upload -->
           <li class="nav-item">
@@ -159,12 +166,7 @@
           </li>
 
           
-          <li class="nav-item">
-            <a class="nav-link {% if request.endpoint=='main.manage_players' %}active{% endif %}"
-               href="{{ url_for('main.manage_players') }}">
-              <i data-feather="users"></i><span>Manage Players</span>
-            </a>
-          </li>
+          
         </ul>
       </nav>
 

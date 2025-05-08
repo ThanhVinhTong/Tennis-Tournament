@@ -9,26 +9,140 @@ from flask_login import login_required, current_user
 from collections import defaultdict
 from datetime import datetime, date
 from app import db
-from app.models import MatchResult, ShareResult, User
+from app.models import MatchResult, ShareResult, User, MatchCalendar
 from app.main import bp
 from app.main.forms import MatchResultForm, UploadForm
-import csv, io, json
+import csv, io, json, logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @bp.route('/home')
 def home():
     """
     Introductory landing page, public.
     """
-    return render_template('main/home.html')
+    return render_template('main/home.html', is_authenticated=current_user.is_authenticated)
 
 @bp.route('/')
 def index():
     """
-    Root: if logged in, go to input_result; otherwise to login.
+    Root: if logged in, go to home; otherwise to login.
     """
     if current_user.is_authenticated:
-        return render_template('main/home.html')
-    return redirect(url_for('auth.login'))
+        return render_template('main/home.html', is_authenticated=True)
+    return render_template('auth/login.html', is_authenticated=False)
+
+@bp.route('/api/matches', methods=['GET'])
+def get_matches():
+    try:
+        year = request.args.get('year', type=int)
+        month = request.args.get('month', type=int)
+        if not all([year, month is not None]):
+            return jsonify({'error': 'Year and month are required'}), 400
+
+        if current_user.is_authenticated:
+            # Fetch matches for the logged-in user for the specified year and month
+            matches = MatchCalendar.query.filter(
+                MatchCalendar.user_id == current_user.id,
+                func.extract('month', MatchCalendar.match_date) == month,
+                func.extract('year', MatchCalendar.match_date) == year
+            ).all()
+            matches_by_day = {str(match.match_date.day): match.to_dict() for match in matches}  # Ensure string keys
+        else:
+            # Return empty matches for public access
+            matches_by_day = {}
+
+        return jsonify(matches_by_day), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching matches: {str(e)}")
+        return jsonify({'error': f'Failed to fetch matches: {str(e)}'}), 500
+
+@bp.route('/api/matches', methods=['POST'])
+@login_required
+def add_match():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        title = data.get('title')
+        players = data.get('players')
+        time = data.get('time')
+        court = data.get('court')
+        match_date_str = data.get('match_date')
+        month = data.get('month')
+
+        # Log the received data
+        logger.info(f"Received match data from user {current_user.id}: title={title}, players={players}, time={time}, court={court}, match_date={match_date_str}, month={month}")
+
+        # Validate inputs
+        if not all([title, players, time, match_date_str, month]):
+            return jsonify({'error': 'All fields are required'}), 400
+
+        try:
+            month = int(month)
+            if not (1 <= month <= 12):
+                return jsonify({'error': 'Month must be between 1 and 12'}), 400
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Month must be a valid integer'}), 400
+
+        # Validate time format (HH:MM)
+        try:
+            datetime.strptime(time, '%H:%M')
+        except ValueError:
+            return jsonify({'error': 'Time must be in HH:MM format (e.g., 14:00)'}), 400
+
+        # Parse match date
+        try:
+            match_date = datetime.strptime(match_date_str, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'error': 'Invalid date format, use YYYY-MM-DD'}), 400
+
+        # Check for duplicate matches for this user
+        existing_match = MatchCalendar.query.filter_by(
+            user_id=current_user.id,
+            match_date=match_date,
+            time=time,
+            court=court
+        ).first()
+
+        if existing_match:
+            return jsonify({'error': 'A match already exists at this date, time, and court for this user'}), 400
+        else:
+            # Set default court if empty or invalid
+            court = court.strip() if court else 'Court 1'
+
+            # Create new match
+            new_match = MatchCalendar(
+                title=title,
+                players=players,
+                time=time,
+                court=court,
+                match_date=match_date,
+                month=month + 1,  # Convert to 1-based for storage
+                user_id=current_user.id
+            )
+
+            flash(f"New match created: {new_match}")
+
+            db.session.add(new_match)
+            db.session.commit()
+
+            # Log successful storage
+            logger.info(f"Match stored successfully: ID={new_match.id} for user {current_user.id}")
+
+            return jsonify({
+                'message': 'Match added successfully',
+                'match': new_match.to_dict()
+            }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error adding match for user {current_user.id}: {str(e)}")
+        return jsonify({'error': f'Failed to add match: {str(e)}'}), 500
 
 # upload part
 @bp.route('/upload', methods=['GET', 'POST'])

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Manage Players{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h3>🎾 Manage Players</h3>
+
+  <form method="POST" class="row g-3 mb-4">
+    {{ form.hidden_tag() }}
+    <div class="col-md-6">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control") }}
+    </div>
+    <div class="col-md-4">
+      {{ form.country.label(class="form-label") }}
+      {{ form.country(class="form-control") }}
+    </div>
+    <div class="col-md-2 align-self-end">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Name</th><th>Country</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for p in players %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ p.name }}</td>
+        <td>{{ p.country or '-' }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('main.delete_player', pid=p.id) }}"
+                onsubmit="return confirm('Delete {{ p.name }}?');">
+            <button class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -240,10 +240,10 @@ canvas {
 }
 
 /* —— Footer —— */
-.footer-not-home {
-  position: fixed;
+.footer {
+  /* position: fixed; */
   bottom: 0;
-  left: 240px;    
+  /* left: 240px;     */
   right: 0;
   background: #fff;
   border-top: 1px solid var(--sa-grey);
@@ -252,10 +252,10 @@ canvas {
   font-size: 0.875rem;
   color: var(--sa-grey);
   z-index: 2001;
+  display: block;
 }
 
-body.sidebar-collapsed .footer-not-home {
-  margin-top: 100px;
+body.sidebar-collapsed .footer {
   left: 0%;    
 }
 

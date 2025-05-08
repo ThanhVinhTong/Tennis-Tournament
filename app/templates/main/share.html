@@ -9,22 +9,20 @@
         <div class="card-body">
           <h4 class="card-title">Share Match Results</h4>
 
-          <!-- 用户选择 -->
+
           <div class="mb-3">
-            <label>Select Users to Share With:</label>
+            <label class="form-label">Select Users to Share With:</label>
             <div class="d-flex gap-2">
-              <select id="shareUsers" multiple size="5" class="form-select" style="max-width:400px;">
-              </select>
+              <select id="shareUsers" class="form-select" multiple size="5" style="width:100%; max-width:400px;"></select>
               <div class="d-flex flex-column gap-1">
-                <button id="selectAllUsers" class="btn btn-sm btn-secondary">Select All</button>
-                <button id="clearUsers" class="btn btn-sm btn-outline-secondary">Clear</button>
+                <button class="btn btn-sm btn-outline-secondary" id="clearUsers" type="button">Clear</button>
               </div>
             </div>
-            <small class="text-muted">
+            <div class="form-text text-muted mt-1">
               You cannot share with yourself or users you've already shared this match with.
-            </small>
+            </div>
           </div>
-
+          
           <!-- 比赛列表 -->
           <div class="table-responsive">
             <table class="table table-hover">
@@ -93,11 +91,18 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  const sharedMap   = {{ shared_map|tojson }};
-  const allUsers    = {{ all_users_data|tojson }};
-  const currentUser = {{ current_username|tojson }};
-</script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{{ url_for('static', filename='js/share.js') }}"></script>
+
+  <script>
+    // 从后端注入的数据
+    const sharedMap   = {{ shared_map|tojson }};      // { match_id: [user_id, ...], … }
+    const allUsers    = {{ all_users_data|tojson }};  // [ { id, username }, … ]
+    const currentUser = {{ current_username|tojson }}; 
+  </script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{{ url_for('static', filename='js/share.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/share_users.js') }}"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
 {% endblock %}

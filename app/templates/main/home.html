@@ -87,9 +87,31 @@
     <div class="container tennis-feature py-5">
         <div class="text-center mb-5">
             <h4 class="fw-bold" style="color: #425701;">Upcoming Matches</h4>
-            <div class="btn-group mb-3">
-                <button class="btn btn-success active" id="btn-april">April</button>
-                <button class="btn btn-success" id="btn-may">May</button>
+            <div class="btn-group-container mb-3">
+                <div class="btn-group">
+                    <select id="month-select" class="form-select me-2">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4" selected>May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                    <select id="year-select" class="form-select">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <button class="btn import-match-btn" data-bs-toggle="modal" data-bs-target="#importMatchModal">
+                    <span class="me-1">🎾</span> Import Match
+                </button>
             </div>
         </div>
         <div class="table-responsive">
@@ -105,6 +127,54 @@
         </div>
     </div>
     <!-- Tennis Match Timetable End -->
+
+    <!-- Import Match Modal -->
+    <div class="modal fade" id="importMatchModal" tabindex="-1" aria-labelledby="importMatchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importMatchModalLabel">Import Match Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if not current_user.is_authenticated %}
+                        <div class="alert alert-warning" role="alert">
+                            Please <a href="{{ url_for('auth.login') }}" class="alert-link">log in</a> to import match data.
+                        </div>
+                    {% else %}
+                        <form id="importMatchForm">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                                <label for="players" class="form-label">Players</label>
+                                <input type="text" class="form-control" id="players" name="players" required maxlength="200">
+                            </div>
+                            <div class="mb-3">
+                                <label for="time" class="form-label">Time (HH:MM)</label>
+                                <input type="text" class="form-control" id="time" name="time" required pattern="\d{2}:\d{2}" placeholder="e.g., 14:00">
+                            </div>
+                            <div class="mb-3">
+                                <label for="court" class="form-label">Court</label>
+                                <input type="text" class="form-control" id="court" name="court" required maxlength="50">
+                            </div>
+                            <div class="mb-3">
+                                <label for="match_date" class="form-label">Match Date</label>
+                                <input type="date" class="form-control" id="match_date" name="match_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="month" class="form-label">Month (1-12)</label>
+                                <input type="number" class="form-control" id="month" name="month" required min="1" max="12">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of import Match Modal -->
 
     <!-- Tournament Tracker Start -->
     <div class="container-fluid tournament-tracker my-5">
@@ -235,13 +305,14 @@
     <!-- Blog End -->
 
     <!-- Footer -->
-    <footer class="footer-not-home mt-5 bg-dark text-white py-4">
+    <footer class="footer mt-5 bg-dark text-white py-4">
         <div class="container text-center">
             <p class="mb-0">&copy; 2025 Group 60. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- Scripts -->
+    <script>window.isAuthenticated = "{{ is_authenticated | tojson }}"</script>
     <script src="{{ url_for('static', filename='js/home.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

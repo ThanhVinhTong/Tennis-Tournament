@@ -7,7 +7,6 @@
     <div class="card"><div class="card-body">
       <h4 class="card-title">Share Match Results</h4>
 
-      <!-- 私有分享用户选择 -->
       <div class="mb-3">
         <label class="form-label">Select Users to Share With:</label>
         <div class="d-flex gap-2">
@@ -20,8 +19,7 @@
           You cannot share with yourself or users you've already shared this match with.
         </div>
       </div>
-
-      <!-- 比赛结果列表 -->
+      
       <div class="table-responsive mt-4">
         <table class="table table-hover">
           <thead>
@@ -49,6 +47,20 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+
+      <!-- Private sharing user -->
+      <div class="mb-3" id="privateUsersSection">
+        <label class="form-label">Select Users to Share With:</label>
+        <div class="d-flex gap-2">
+          <select id="shareUsers" class="form-select" multiple style="width: 100%; max-width: 400px;"></select>
+          <div class="d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-outline-secondary" id="clearUsers" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="form-text text-muted mt-1">
+          You cannot share with yourself or users you've already shared this match with.
+        </div>
       </div>
 
       <button id="btnShare" class="btn btn-primary mt-3">Share Selected</button>

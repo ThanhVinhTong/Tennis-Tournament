@@ -48,18 +48,16 @@ class User(UserMixin, db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-     return User.query.get(int(user_id))
+    return User.query.get(int(user_id))
 
 class MatchResult(db.Model):
     __tablename__ = 'match_result'
     id              = db.Column(db.Integer, primary_key=True)
     tournament_name = db.Column(db.String(128), nullable=False)
     match_date      = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
     player1_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     player2_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     winner_id  = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
-
     score    = db.Column(db.String(20), nullable=True)
     user_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -78,7 +76,6 @@ class ShareResult(db.Model):
     recipient_id     = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     is_public        = db.Column(db.Boolean, default=False, nullable=False)
     timestamp        = db.Column(db.DateTime, default=datetime.utcnow)
-
     match_result = db.relationship('MatchResult', backref='shares')
 
     def __repr__(self):

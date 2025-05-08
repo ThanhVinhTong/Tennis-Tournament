@@ -22,8 +22,8 @@
               You cannot share with yourself or users you've already shared this match with.
             </div>
           </div>
-          
-          <!-- 比赛列表 -->
+
+          <!-- List of matches -->
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
@@ -53,7 +53,7 @@
 
           <button id="btnShare" class="btn btn-primary mt-3">Share Selected</button>
 
-          <!-- 分享历史 -->
+          <!-- Share History -->
           <hr class="my-4">
           <h5>Private Share History</h5>
           {% if share_history %}
@@ -93,9 +93,9 @@
 {% block scripts %}
 
   <script>
-    // 从后端注入的数据
-    const sharedMap   = {{ shared_map|tojson }};      // { match_id: [user_id, ...], … }
-    const allUsers    = {{ all_users_data|tojson }};  // [ { id, username }, … ]
+    //Data injected from the backend
+    const sharedMap   = {{ shared_map|tojson }};      
+    const allUsers    = {{ all_users_data|tojson }};  
     const currentUser = {{ current_username|tojson }}; 
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

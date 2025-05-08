@@ -1,18 +1,16 @@
-from datetime import datetime, date
-from collections import defaultdict
-import csv, io, json
-
 from flask import (
-    abort, render_template, redirect, url_for, flash,
+    render_template, redirect, url_for, flash,
     request, jsonify
 )
 from flask_login import login_required, current_user
+from datetime import datetime, date
 from sqlalchemy import func, desc
+from collections import defaultdict
 
 from app import db
-from app.models import MatchResult, ShareResult, User
 from app.main import bp
-from app.main.forms import MatchResultForm, UploadForm
+from app.models import Player, MatchResult, ShareResult, User
+from app.main.forms import PlayerForm, MatchResultForm, UploadForm
 
 
 @bp.route('/home')
@@ -32,6 +30,35 @@ def index():
         return render_template('main/home.html')
     return redirect(url_for('auth.login'))
 
+# —— 球员管理 —— #
+@bp.route('/players', methods=['GET', 'POST'])
+@login_required
+def manage_players():
+    form = PlayerForm()
+    players = Player.query.order_by(Player.name).all()
+
+    if form.validate_on_submit():
+        # 避免重名
+        if Player.query.filter_by(name=form.name.data).first():
+            flash('Player already exists.', 'warning')
+        else:
+            p = Player(name=form.name.data, country=form.country.data)
+            db.session.add(p)
+            db.session.commit()
+            flash('✅ Player added.', 'success')
+        return redirect(url_for('main.manage_players'))
+
+    return render_template('main/players.html', form=form, players=players)
+
+@bp.route('/players/delete/<int:pid>', methods=['POST'])
+@login_required
+def delete_player(pid):
+    p = Player.query.get_or_404(pid)
+    db.session.delete(p)
+    db.session.commit()
+    flash('🗑️ Player deleted.', 'info')
+    return redirect(url_for('main.manage_players'))
+
 
 # —— upload part —— #
 @bp.route('/upload', methods=['GET', 'POST'])
@@ -40,13 +67,13 @@ def upload():
     manual_form = MatchResultForm(prefix='m')
     upload_form = UploadForm(prefix='u')
 
-    # prepare player choices
-    users = User.query.order_by(User.username).all()
-    choices = [(u.username, u.username) for u in users]
+    # Load players into the form
+    players = Player.query.order_by(Player.name).all()
+    choices = [(p.id, p.name) for p in players]
     manual_form.player1.choices = choices
     manual_form.player2.choices = choices
 
-    # 1. CSV upload & preview
+    # —— 1. CSV upload & preview —— 
     if upload_form.validate_on_submit() and upload_form.submit_csv.data:
         data = upload_form.csv_file.data.read().decode('utf-8')
         stream = io.StringIO(data)
@@ -54,7 +81,7 @@ def upload():
 
         rows, errors = [], []
         for idx, row in enumerate(reader, start=1):
-            missing = [k for k, v in row.items() if not v or not v.strip()]
+            missing = [k for k,v in row.items() if not v or not v.strip()]
             if missing:
                 errors.append((idx, missing))
             rows.append(row)
@@ -66,33 +93,35 @@ def upload():
             errors=errors
         )
 
-    # 2. Manual entry
+    # —— 2. Manual entry —— 
     if manual_form.submit_manual.data and manual_form.validate_on_submit():
-        p1, p2 = manual_form.player1.data, manual_form.player2.data
-        s1, s2 = manual_form.score1.data, manual_form.score2.data
+        p1_id = manual_form.player1.data
+        p2_id = manual_form.player2.data
+        s1 = manual_form.score1.data
+        s2 = manual_form.score2.data
 
         if s1 == s2:
-            flash('⚠️ There is no tied game in Tennis, please check again the result', 'danger')
+            flash('⚠️ There is no tied game in Tennis.', 'danger')
             return redirect(url_for('main.upload'))
 
-        winner = p1 if s1 > s2 else p2
+        winner_id = p1_id if s1 > s2 else p2_id
         score_str = f"{s1}-{s2}"
 
         m = MatchResult(
             tournament_name=manual_form.tournament_name.data,
-            player1=p1,
-            player2=p2,
+            player1_id=p1_id,
+            player2_id=p2_id,
+            winner_id=winner_id,
             score=score_str,
-            winner=winner,
             match_date=manual_form.match_date.data or datetime.utcnow(),
             user_id=current_user.id
         )
         db.session.add(m)
         db.session.commit()
-        flash('✅ Single record submitted successfully!', 'success')
+        flash('✅ Match recorded.', 'success')
         return redirect(url_for('main.view_stats'))
 
-    # GET or validation failure
+    # —— GET or validation failure —— 
     return render_template(
         'main/upload.html',
         manual_form=manual_form,
@@ -111,14 +140,21 @@ def upload_confirm():
 
     count = 0
     for r in rows:
+        # Lookup players by name
+        p1 = Player.query.filter_by(name=r['player1']).first()
+        p2 = Player.query.filter_by(name=r['player2']).first()
+        w  = Player.query.filter_by(name=r['winner']).first()
+        if not (p1 and p2 and w):
+            continue
+
         try:
             m = MatchResult(
                 tournament_name=r['tournament_name'],
                 match_date=datetime.strptime(r['match_date'], '%Y-%m-%d'),
-                player1=r['player1'],
-                player2=r['player2'],
+                player1_id=p1.id,
+                player2_id=p2.id,
+                winner_id=w.id,
                 score=r['score'],
-                winner=r['winner'],
                 user_id=current_user.id
             )
             db.session.add(m)
@@ -131,11 +167,10 @@ def upload_confirm():
     return redirect(url_for('main.view_stats'))
 
 
-# —— view_stats part —— #
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-    # 1. Personal: own + private shared to me
+    # —— 1. 个人 own + 私有分享 —— #
     own = (MatchResult.query
            .filter_by(user_id=current_user.id)
            .order_by(desc(MatchResult.match_date))
@@ -147,51 +182,94 @@ def view_stats():
                    .order_by(desc(ShareResult.timestamp))
                    .all()
     ]
-    personal = sorted(own + private_shared, key=lambda r: r.match_date, reverse=True)
+    personal = sorted(own + private_shared,
+                      key=lambda r: r.match_date, reverse=True)
 
-    total = len(personal)
-    wins = sum(1 for r in personal if r.winner == current_user.username)
+    total  = len(personal)
+    # 找到当前用户对应的 Player.id（假设用户名即 Player.name）
+    user_player = Player.query.filter_by(name=current_user.username).first()
+    pid = user_player.id if user_player else None
+    # 计算胜负
+    wins   = sum(1 for r in personal if r.winner_id == pid)
     losses = total - wins
-    stats = {
+    stats  = {
         'total_matches':  total,
         'win_count':      wins,
         'win_percentage': f"{(wins/total*100):.1f}%" if total else "0.0%",
         'win_loss_ratio': f"{wins}:{losses}"
     }
 
+    # 折线图数据
     rev = list(reversed(personal))
     chart_labels = [r.match_date.strftime('%b %Y') for r in rev]
-    chart_won    = [1 if r.winner == current_user.username else 0 for r in rev]
-    chart_lost   = [1 if r.winner != current_user.username else 0 for r in rev]
+    chart_won    = [1 if r.winner_id == pid else 0 for r in rev]
+    chart_lost   = [1 if r.winner_id != pid else 0 for r in rev]
     recent5      = personal[:5]
 
-    # 2. Private sharing statistics by month
-    monthly = (
-        db.session.query(
-            func.strftime('%Y-%m', ShareResult.timestamp).label('month'),
-            func.count(ShareResult.id).label('cnt')
-        )
-        .filter(
-            ShareResult.sender_id == current_user.id,
-            ShareResult.is_public == False
-        )
-        .group_by('month')
-        .order_by('month')
-        .all()
-    )
-    private_months = [m.month for m in monthly]
-    private_counts = [m.cnt   for m in monthly]
-
-    # 3. Global ranking
+    # —— 2. 全局排名：按球员胜场数排序 —— #
     user_win_counts = (
-        db.session.query(MatchResult.winner, func.count(MatchResult.id).label('win_count'))
-        .group_by(MatchResult.winner)
+        db.session.query(
+            Player.name.label('username'),
+            func.count(MatchResult.id).label('win_count')
+        )
+        .join(MatchResult, MatchResult.winner_id == Player.id)
+        .group_by(Player.name)
         .order_by(desc('win_count'))
         .all()
     )
-    global_ranking = [{'username': u[0], 'win_count': u[1]} for u in user_win_counts]
-    user_rank = next((i + 1 for i, u in enumerate(global_ranking)
-                      if u['username'] == current_user.username), None)
+    global_ranking = [
+        {'username': name, 'win_count': cnt}
+        for name, cnt in user_win_counts
+    ]
+    user_rank = next((i+1 for i,u in enumerate(global_ranking)
+                      if u['username']==current_user.username), None)
+
+    # —— 3. 球员参赛 & 胜率统计 —— #
+    # 先拿出所有参赛 ID（player1_id 或 player2_id）
+    subq_participants = (
+        db.session.query(MatchResult.player1_id.label('pid'))
+        .union_all(
+            db.session.query(MatchResult.player2_id.label('pid'))
+        )
+        .subquery()
+    )
+    # 出场次数
+    played_stats = (
+        db.session.query(
+            Player.name.label('player'),
+            func.count().label('played')
+        )
+        .join(subq_participants, Player.id == subq_participants.c.pid)
+        .group_by(Player.name)
+        .subquery()
+    )
+    # 胜场次数
+    wins_stats = (
+        db.session.query(
+            Player.name.label('player'),
+            func.count().label('wins')
+        )
+        .join(MatchResult, MatchResult.winner_id == Player.id)
+        .group_by(Player.name)
+        .subquery()
+    )
+    # 合并出场与胜场，算胜率
+    stats_players = (
+        db.session.query(
+            played_stats.c.player,
+            played_stats.c.played,
+            func.coalesce(wins_stats.c.wins, 0).label('wins'),
+            (func.coalesce(wins_stats.c.wins, 0)
+             / played_stats.c.played * 100).label('win_pct')
+        )
+        .outerjoin(wins_stats, played_stats.c.player == wins_stats.c.player)
+        .order_by(desc(played_stats.c.played))
+        .all()
+    )
+    player_names   = [r.player   for r in stats_players]
+    player_played  = [r.played   for r in stats_players]
+    player_wins    = [r.wins     for r in stats_players]
+    player_win_pct = [round(r.win_pct,1) for r in stats_players]
 
     return render_template(
         'main/view_stats.html',
@@ -202,8 +280,10 @@ def view_stats():
         recent_results=recent5,
         user_rank=user_rank,
         global_ranking=global_ranking,
-        private_months=private_months,
-        private_counts=private_counts
+        player_names=player_names,
+        player_played=player_played,
+        player_wins=player_wins,
+        player_win_pct=player_win_pct
     )
 
 
@@ -273,42 +353,73 @@ def api_matches_by_date():
 @login_required
 def share():
     if request.method == 'GET':
-        # 1) User's own matches
-        match_results = (
+        # 1. 当前用户的比赛
+        raw_matches = (
             MatchResult.query
-            .filter_by(user_id=current_user.id)
-            .order_by(desc(MatchResult.match_date))
-            .all()
+                       .filter_by(user_id=current_user.id)
+                       .order_by(desc(MatchResult.match_date))
+                       .all()
         )
-        # 2) All other users
+        # 预处理：将每条 MatchResult 转成字典，附带 player1_name, player2_name, winner_name
+        share_matches = []
+        for m in raw_matches:
+            p1 = Player.query.get(m.player1_id)
+            p2 = Player.query.get(m.player2_id)
+            w  = Player.query.get(m.winner_id)
+            share_matches.append({
+                'id':         m.id,
+                'date':       m.match_date.strftime('%Y-%m-%d'),
+                'tournament': m.tournament_name,
+                'players':    f"{p1.name if p1 else '-'} vs {p2.name if p2 else '-'}",
+                'score':      m.score,
+                'winner':     w.name if w else '-'
+            })
+
+        # 2. 下拉可选用户名单
         all_users = User.query.filter(User.id != current_user.id) \
                               .order_by(User.username).all()
         all_users_data = [{'id': u.id, 'username': u.username} for u in all_users]
-        # 3) Existing private shares map
+
+        # 3. 已私有分享映射
         shared_map = defaultdict(list)
-        private_recs = ShareResult.query.filter_by(
-            sender_id=current_user.id, is_public=False
-        ).all()
-        for s in private_recs:
-            shared_map[s.match_result_id].append(s.recipient_id)
+        for sr in ShareResult.query.filter_by(sender_id=current_user.id, is_public=False):
+            shared_map[sr.match_result_id].append(sr.recipient_id)
+
+        # 4. 私有分享历史
+        share_history = []
+        recs = (
+            ShareResult.query
+                       .filter_by(sender_id=current_user.id, is_public=False)
+                       .order_by(desc(ShareResult.timestamp))
+                       .all()
+        )
+        for sr in recs:
+            mr = sr.match_result
+            p1 = Player.query.get(mr.player1_id)
+            p2 = Player.query.get(mr.player2_id)
+            share_history.append({
+                'date':       sr.timestamp.strftime('%Y-%m-%d'),
+                'tournament': mr.tournament_name,
+                'players':    f"{p1.name if p1 else '-'} vs {p2.name if p2 else '-'}",
+                'recipient':  sr.recipient.username
+            })
 
         return render_template(
             'main/share.html',
-            match_results=match_results,
+            share_matches=share_matches,
             all_users_data=all_users_data,
             shared_map=shared_map,
-            current_username=current_user.username
+            current_username=current_user.username,
+            share_history=share_history
         )
 
-    # POST: handle private share
+    # POST: 私有分享
     data = request.get_json() or {}
     match_ids = data.get('match_ids', [])
     usernames = data.get('usernames', [])
-
     if not match_ids or not usernames:
         return jsonify({'message': 'match_ids and usernames required'}), 400
 
-    added = 0
     for mid in match_ids:
         for uname in usernames:
             user = User.query.filter_by(username=uname).first()
@@ -328,11 +439,8 @@ def share():
                     is_public=False,
                     timestamp=datetime.utcnow()
                 ))
-                added += 1
-
     db.session.commit()
-    return jsonify({'result': 'shared_private', 'added': added}), 200
-
+    return jsonify({'result': 'shared_private'}), 200
 
 @bp.route('/unshare/<int:share_id>', methods=['POST'])
 @login_required

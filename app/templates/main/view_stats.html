@@ -67,16 +67,17 @@
       </div>
     </div>
 
+    <!-- 新增：球员参赛 & 胜率分布 Bar Chart -->
     <div class="col-lg-6 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <i class="fas fa-share-alt me-2"></i>Monthly Private Shares
-        </div>
-        <div class="card-body">
-          <canvas id="privateCountChart" height="250"></canvas>
+       <div class="card h-100 shadow-sm">
+          <div class="card-header bg-warning text-white">
+            <i class="fas fa-user-friends me-2"></i>Player Performance
+          </div>
+          <div class="card-body">
+            <canvas id="playerChart" height="250"></canvas>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 </div>
 {% endblock %}
@@ -98,19 +99,35 @@
       }
     );
 
+
+    // —— Player Performance Chart —— 
     new Chart(
-      document.getElementById('privateCountChart').getContext('2d'), {
+      document.getElementById('playerChart').getContext('2d'), {
         type: 'bar',
         data: {
-          labels: {{ private_months|tojson }},
-          datasets: [{
-            label: 'Private Shares',
-            data: {{ private_counts|tojson }},
-            backgroundColor: 'rgba(54,162,235,0.6)'
-          }]
+          labels: {{ player_names|tojson }},
+          datasets: [
+            {
+              label: 'Matches Played',
+              data: {{ player_played|tojson }},
+              backgroundColor: 'rgba(75,192,192,0.6)'
+            },
+            {
+              label: 'Wins',
+              data: {{ player_wins|tojson }},
+              backgroundColor: 'rgba(153,102,255,0.6)'
+            }
+          ]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
       }
     );
+
+    
   </script>
 {% endblock %}

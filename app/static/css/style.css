@@ -307,3 +307,9 @@ body.sidebar-collapsed .footer {
   /* 原有 padding 不变，只在底部多加 Footer 高度(约64px)+一点间距 */
   padding-bottom: calc(1.5rem + 64px + 1rem);
 }
+
+/* —— 调整 Share 页面左右内边距 —— */
+.content-wrapper .container-fluid {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}

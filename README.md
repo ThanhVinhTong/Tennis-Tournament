@@ -20,6 +20,10 @@ Built with:
 
 ## Team Members
 
+Student name: Zhenhao Zhu           Student ID: 24065267            Github: dynamicCat
+
+
+
 ## Prerequisites
 
 * Python 3.7 or higher
@@ -99,6 +103,5 @@ CITS5505-Group-60-project/
 └── README.md
 
 ```
-
 
 ## Running Tests

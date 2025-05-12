@@ -40,12 +40,7 @@ class ShareForm(FlaskForm):
     submit_share = SubmitField('Share Selected Result')
     
 
-from flask_wtf import FlaskForm
-from wtforms import (
-    StringField, SelectField, SubmitField,
-    DateField, IntegerField
-)
-from wtforms.validators import DataRequired, Optional
+
 
 
 

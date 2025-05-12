@@ -12,3 +12,5 @@ Flask-Login
 Flask-Migrate
 Flask-SQLAlchemy
 email-validator
+Flask-SocketIO
+eventlet

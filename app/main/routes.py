@@ -7,11 +7,11 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import func, desc
 from collections import defaultdict
 import statistics
+from flask_socketio import join_room
 
 
 
-
-from app import db
+from app import db, socketio
 from app.main import bp
 from app.models import Player, MatchResult, ShareResult, User, MatchCalendar
 from app.main import bp
@@ -286,20 +286,27 @@ def upload_confirm():
     flash(f'✅ Successfully imported {count} records.', 'success')
     return redirect(url_for('main.view_stats'))
 
-
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-    # 全库用户可见比赛（自己和私密分享）
-    own = MatchResult.query.filter_by(user_id=current_user.id).all()
-    shared = [sr.match_result for sr in ShareResult.query.filter_by(
-        recipient_id=current_user.id, is_public=False).all()]
-    matches = sorted(own + shared, key=lambda m: m.match_date)
+    # 1. The current user's own uploaded game
+    own_matches = MatchResult.query.filter_by(user_id=current_user.id).all()
 
-    # KPI 1: 总比赛数
+    # 2. Share the game to the current user (private sharing)
+    shared_recs = ShareResult.query.filter_by(
+        recipient_id=current_user.id,
+        is_public=False
+    ).all()
+    shared_matches = [sr.match_result for sr in shared_recs]
+
+    # 3. Merge and sort by date
+    matches = sorted(own_matches + shared_matches,
+                     key=lambda m: m.match_date)
+
+    # —— KPI 1: Total number of games —— #
     total_matches = len(matches)
 
-    # 月度比赛统计
+    # —— Monthly Competition Statistics —— #
     month_counts = {}
     for m in matches:
         key = m.match_date.strftime('%Y-%m')
@@ -307,69 +314,69 @@ def view_stats():
     busiest_month = max(month_counts, key=month_counts.get) if month_counts else ''
     avg_per_month = round(total_matches / len(month_counts), 1) if month_counts else 0
 
-    # 玩家统计
-    players = Player.query.all()
-    player_names = [p.name for p in players]
+    # —— Player Statistics —— #
+    
+    player_ids = set()
+    for m in matches:
+        player_ids.add(m.player1_id)
+        player_ids.add(m.player2_id)
+    players = Player.query.filter(Player.id.in_(player_ids)).all()
+
+    player_names = []
     played_counts = []
     win_counts = []
     loss_counts = []
     win_pcts = []
 
     for p in players:
-        played = db.session.query(func.count(MatchResult.id)).filter(
-            (MatchResult.player1_id == p.id) | (MatchResult.player2_id == p.id)
-        ).scalar() or 0
-        wins = db.session.query(func.count(MatchResult.id)).filter(
-            MatchResult.winner_id == p.id
-        ).scalar() or 0
-        losses = played - wins
-        pct = round((wins / played * 100), 1) if played else 0
-        played_counts.append(played)
+      
+        p_matches = [m for m in matches if m.player1_id == p.id or m.player2_id == p.id]
+        wins = sum(1 for m in p_matches if m.winner_id == p.id)
+        losses = len(p_matches) - wins
+        pct = round((wins / len(p_matches) * 100), 1) if p_matches else 0
+
+        player_names.append(p.name)
+        played_counts.append(len(p_matches))
         win_counts.append(wins)
         loss_counts.append(losses)
         win_pcts.append(pct)
 
-    # KPI 2 & 3: 胜率最高/最低
-    if win_pcts:
-        max_i = win_pcts.index(max(win_pcts))
-        min_i = win_pcts.index(min(win_pcts))
-        highest_win_player = player_names[max_i]
-        highest_win_pct = win_pcts[max_i]
-        lowest_win_player = player_names[min_i]
-        lowest_win_pct = win_pcts[min_i]
+    # —— Highest/Lowest Win Rate —— #
+    if players:
+        max_idx = win_pcts.index(max(win_pcts))
+        min_idx = win_pcts.index(min(win_pcts))
+        highest_win_player = player_names[max_idx]
+        highest_win_pct    = win_pcts[max_idx]
+        lowest_win_player  = player_names[min_idx]
+        lowest_win_pct     = win_pcts[min_idx]
     else:
         highest_win_player = lowest_win_player = ''
         highest_win_pct = lowest_win_pct = 0
 
-    # 月度趋势折线
-    monthly_labels = sorted(month_counts.keys())
-    monthly_totals = [month_counts[m] for m in monthly_labels]
-    # 回归趋势线计算
-    n = len(monthly_totals)
-    xs = list(range(n))
-    ys = monthly_totals
-    if n >= 2:
-        xm = sum(xs) / n; ym = sum(ys) / n
-        num = sum((x-xm)*(y-ym) for x,y in zip(xs,ys))
-        den = sum((x-xm)**2 for x in xs)
-        slope = num/den if den else 0
-        intercept = ym - slope*xm
-        trend = [round(slope*x + intercept,1) for x in xs]
-    else:
-        trend = monthly_totals
+    # —— Ranking —— #
+    leaderboard = [
+        {'player': name, 'wins': wins}
+        for name, wins in sorted(
+            zip(player_names, win_counts),
+            key=lambda x: x[1],
+            reverse=True
+        )
+    ]
 
-    # 饼图：胜场占比
+
+    # —— Monthly Trend and Pie Chart Data —— #
+    monthly_labels = list(month_counts.keys())
+    monthly_totals = list(month_counts.values())
+    # Simple trend: change from the previous month
+    trend = [monthly_totals[i] - monthly_totals[i-1]
+             for i in range(1, len(monthly_totals))]
+    trend.insert(0, monthly_totals[0] if monthly_totals else 0)
+
     pie_labels = player_names
-    pie_data = win_counts
+    pie_data   = win_counts
 
-    # 胜场排行榜
-    leaderboard = sorted(
-        [{'player': player_names[i], 'wins': win_counts[i]} for i in range(len(player_names))],
-        key=lambda x: x['wins'], reverse=True
-    )
-
-    return render_template('main/view_stats.html',
-        # KPI
+    return render_template(
+        'main/view_stats.html',
         total_matches=total_matches,
         busiest_month=busiest_month,
         avg_per_month=avg_per_month,
@@ -377,23 +384,17 @@ def view_stats():
         highest_win_pct=highest_win_pct,
         lowest_win_player=lowest_win_player,
         lowest_win_pct=lowest_win_pct,
-        # Player stats
+        leaderboard=leaderboard,
         player_names=player_names,
         played_counts=played_counts,
         win_counts=win_counts,
         loss_counts=loss_counts,
-        # Monthly trend
         monthly_labels=monthly_labels,
         monthly_totals=monthly_totals,
         trend=trend,
-        # Pie
         pie_labels=pie_labels,
-        pie_data=pie_data,
-        # Leaderboard
-        leaderboard=leaderboard
+        pie_data=pie_data
     )
-
-    
     
     
     
@@ -402,17 +403,26 @@ def view_stats():
 @bp.route('/received_results')
 @login_required
 def received_results():
-    private_ids = (
-        db.session.query(ShareResult.match_result_id)
-        .filter(ShareResult.recipient_id == current_user.id, ShareResult.is_public == False)
-        .subquery()
+    recs = (
+        ShareResult.query
+                   .filter_by(recipient_id=current_user.id, is_public=False)
+                   .order_by(desc(ShareResult.timestamp))
+                   .all()
     )
-    private_matches = (
-        MatchResult.query
-        .filter(MatchResult.id.in_(private_ids))
-        .order_by(MatchResult.match_date.desc())
-        .all()
-    )
+    private_matches = []
+    for sr in recs:
+        m  = sr.match_result
+        p1 = Player.query.get(m.player1_id)
+        p2 = Player.query.get(m.player2_id)
+        w  = Player.query.get(m.winner_id)
+        private_matches.append({
+            'match_date': m.match_date,
+            'tournament': m.tournament_name,
+            'player1':    p1.name if p1 else '-',
+            'player2':    p2.name if p2 else '-',
+            'score':      m.score,
+            'winner':     w.name if w else '-'
+        })
 
     return render_template(
         'main/received_results.html',
@@ -460,20 +470,28 @@ def api_matches_by_date():
 
 
 # —— share part —— #
+# —— WebSocket —— #
+@socketio.on('connect')
+def handle_connect():
+    """When a user connects, add them to the user_{id} room."""
+    if current_user.is_authenticated:
+        join_room(f'user_{current_user.id}')
+
+
+# —— Private Share View —— #
 @bp.route('/share', methods=['GET', 'POST'])
 @login_required
 def share():
     if request.method == 'GET':
-        # 1. Current user's games
-        raw_matches = (
+        # ——— 1. The games I uploaded ———
+        own = (
             MatchResult.query
                        .filter_by(user_id=current_user.id)
                        .order_by(desc(MatchResult.match_date))
                        .all()
         )
-        # Preprocessing: Convert each MatchResult into a dictionary with player1_name, player2_name, winner_name
         share_matches = []
-        for m in raw_matches:
+        for m in own:
             p1 = Player.query.get(m.player1_id)
             p2 = Player.query.get(m.player2_id)
             w  = Player.query.get(m.winner_id)
@@ -481,37 +499,55 @@ def share():
                 'id':         m.id,
                 'date':       m.match_date.strftime('%Y-%m-%d'),
                 'tournament': m.tournament_name,
-                'players':    f"{p1.name if p1 else '-'} vs {p2.name if p2 else '-'}",
+                'players':    f"{p1.name or '-'} vs {p2.name or '-'}",
                 'score':      m.score,
                 'winner':     w.name if w else '-'
             })
 
-        # 2. Pull down the list of available users
+        # ——— 2. “Share to me” contest — Allow me to repost them
+        incoming = (
+            ShareResult.query
+                       .filter_by(recipient_id=current_user.id, is_public=False)
+                       .order_by(desc(ShareResult.timestamp))
+                       .all()
+        )
+        for sr in incoming:
+            m = sr.match_result
+            p1 = Player.query.get(m.player1_id)
+            p2 = Player.query.get(m.player2_id)
+            w  = Player.query.get(m.winner_id)
+            share_matches.append({
+                'id':         m.id,
+                'date':       m.match_date.strftime('%Y-%m-%d'),
+                'tournament': m.tournament_name,
+                'players':    f"{p1.name or '-'} vs {p2.name or '-'}",
+                'score':      m.score,
+                'winner':     w.name if w else '-'
+            })
+
+        # ——— 3. List all shareable users & private sharing mapping & sharing history —— #
         all_users = User.query.filter(User.id != current_user.id) \
                               .order_by(User.username).all()
         all_users_data = [{'id': u.id, 'username': u.username} for u in all_users]
 
-        # 3. Private shared mapping
         shared_map = defaultdict(list)
         for sr in ShareResult.query.filter_by(sender_id=current_user.id, is_public=False):
             shared_map[sr.match_result_id].append(sr.recipient_id)
 
-        # 4. Private sharing history
         share_history = []
-        recs = (
+        for sr in (
             ShareResult.query
                        .filter_by(sender_id=current_user.id, is_public=False)
                        .order_by(desc(ShareResult.timestamp))
                        .all()
-        )
-        for sr in recs:
+        ):
             mr = sr.match_result
             p1 = Player.query.get(mr.player1_id)
             p2 = Player.query.get(mr.player2_id)
             share_history.append({
                 'date':       sr.timestamp.strftime('%Y-%m-%d'),
                 'tournament': mr.tournament_name,
-                'players':    f"{p1.name if p1 else '-'} vs {p2.name if p2 else '-'}",
+                'players':    f"{p1.name or '-'} vs {p2.name or '-'}",
                 'recipient':  sr.recipient.username
             })
 
@@ -524,13 +560,14 @@ def share():
             share_history=share_history
         )
 
-    # POST: Private sharing
+    # POST: Handle private sharing, retain the original logic and trigger WebSocket notification
     data = request.get_json() or {}
     match_ids = data.get('match_ids', [])
     usernames = data.get('usernames', [])
     if not match_ids or not usernames:
         return jsonify({'message': 'match_ids and usernames required'}), 400
 
+    pushed = set()
     for mid in match_ids:
         for uname in usernames:
             user = User.query.filter_by(username=uname).first()
@@ -543,15 +580,26 @@ def share():
                 is_public=False
             ).first()
             if not exists:
-                db.session.add(ShareResult(
+                sr = ShareResult(
                     match_result_id=mid,
                     sender_id=current_user.id,
                     recipient_id=user.id,
                     is_public=False,
                     timestamp=datetime.utcnow()
-                ))
+                )
+                db.session.add(sr)
+                pushed.add(user.id)
+
     db.session.commit()
+
+    # WebSocket
+    payload = {'from': current_user.username, 'match_ids': match_ids}
+    for uid in pushed:
+        socketio.emit('new_share', payload, room=f'user_{uid}')
+
     return jsonify({'result': 'shared_private'}), 200
+
+
 
 @bp.route('/unshare/<int:share_id>', methods=['POST'])
 @login_required

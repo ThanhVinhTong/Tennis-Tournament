@@ -92,6 +92,19 @@
 
 {% block scripts %}
 
+  {{ super() }}
+  <!-- Socket.IO auto-refresh -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const socket = io();
+
+      socket.on('new_share', data => {
+      // Automatically refresh the page when there is a new sharing event
+        location.reload();
+      });
+    });
+  </script>
+
   <script>
     //Data injected from the backend
     const sharedMap   = {{ shared_map|tojson }};      
@@ -106,3 +119,10 @@
 
 
 {% endblock %}
+
+
+
+
+
+
+

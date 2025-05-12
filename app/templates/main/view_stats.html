@@ -2,49 +2,64 @@
 {% block title %}Match Analytics{% endblock %}
 
 {% block content %}
+<style>
+  .kpi-card {
+    width: 150px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .kpi-card .card-body {
+    padding: 10px;
+  }
+  .kpi-card small {
+    font-size: 0.8em;
+  }
+  .kpi-card h3 {
+    margin: 0;
+    font-size: 1.5em;
+  }
+</style>
 <div class="container-fluid">
-  <div class="row mb-4">
-    <div class="col">
-      <h2><i class="fas fa-chart-bar me-2"></i>Match Analytics Dashboard</h2>
-      <p class="text-muted">Your personal stats and private shares analytics</p>
-    </div>
-  </div>
+  <h2 class="mb-4">Match Analytics Dashboard</h2>
 
-  <!-- KPI Cards -->
-  <div class="row mb-5">
-    {% for key,label in [
-        ('total_matches','Matches Played'),
-        ('win_count','Matches Won'),
-        ('win_percentage','Win %'),
-        ('win_loss_ratio','W/L Ratio')
-      ] %}
-    <div class="col-sm-6 col-md-3 mb-4">
-      <div class="card h-100 text-center shadow-sm">
+  <!-- KPI 卡片 -->
+  <div class="row mb-4">
+    {% set cards = [
+      ('Total Matches', total_matches),
+      ('Busiest Month', busiest_month),
+      ('Avg Matches/Month', avg_per_month),
+      ('Highest Win %', highest_win_player ~ ' (' ~ highest_win_pct ~ '%)'),
+      ('Lowest Win %', lowest_win_player ~ ' (' ~ lowest_win_pct ~ '%)')
+    ] %}
+    {% for title,value in cards %}
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm kpi-card text-center">
         <div class="card-body">
-          <p class="text-muted small mb-2">{{ label }}</p>
-          <h3 class="fw-bold mb-0">{{ stats[key] }}</h3>
+          <small class="text-muted">{{ title }}</small>
+          <h3 class="mt-2">{{ value }}</h3>
         </div>
       </div>
     </div>
     {% endfor %}
   </div>
 
-  <!-- Global Leaderboard -->
+  <!-- 胜场排行榜 -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">
-          <i class="fas fa-trophy me-2"></i>Global Leaderboard
-        </div>
+        <div class="card-header bg-secondary text-white">Win Leaderboard</div>
         <div class="card-body table-responsive">
-          <table class="table table-striped">
-            <thead><tr><th>Rank</th><th>Username</th><th>Wins</th></tr></thead>
+          <table class="table table-striped mb-0">
+            <thead><tr><th>Rank</th><th>Player</th><th>Wins</th></tr></thead>
             <tbody>
-              {% for u in global_ranking %}
+              {% for entry in leaderboard %}
               <tr>
                 <td>#{{ loop.index }}</td>
-                <td>{{ u.username }}</td>
-                <td>{{ u.win_count }}</td>
+                <td>{{ entry.player }}</td>
+                <td>{{ entry.wins }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -54,80 +69,76 @@
     </div>
   </div>
 
-  <!-- Charts: Performance & Private Shares -->
-  <div class="row mb-4">
+  <!-- 图表区域 -->
+  <div class="row">
+    <!-- Bar: Matches Played per Player -->
     <div class="col-lg-6 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-success text-white">
-          <i class="fas fa-chart-line me-2"></i>Performance Trends
-        </div>
-        <div class="card-body">
-          <canvas id="personalChart" height="250"></canvas>
-        </div>
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Matches Played per Player</div>
+        <div class="card-body"><canvas id="playedBar" height="200"></canvas></div>
       </div>
     </div>
-
-    <!-- Player Participation & Win Rate Distribution Bar Chart -->
+    <!-- Bar: Wins vs Losses -->
     <div class="col-lg-6 mb-4">
-       <div class="card h-100 shadow-sm">
-          <div class="card-header bg-warning text-white">
-            <i class="fas fa-user-friends me-2"></i>Player Performance
-          </div>
-          <div class="card-body">
-            <canvas id="playerChart" height="250"></canvas>
-          </div>
-        </div>
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">Wins vs Losses</div>
+        <div class="card-body"><canvas id="winLossBar" height="200"></canvas></div>
       </div>
+    </div>
+    <!-- Line: Monthly Match Trend -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">Monthly Match Trend</div>
+        <div class="card-body"><canvas id="trendLine" height="200"></canvas></div>
+      </div>
+    </div>
+    <!-- Pie: Win Distribution -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-warning text-white">Win Distribution</div>
+        <div class="card-body"><canvas id="pieChart" height="200"></canvas></div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    new Chart(
-      document.getElementById('personalChart').getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: {{ chart_labels|tojson }},
-          datasets: [
-            { label: 'Won',  data: {{ chart_won|tojson }},  fill: true, tension: 0.3 },
-            { label: 'Lost', data: {{ chart_lost|tojson }}, fill: true, tension: 0.3 }
-          ]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-      }
-    );
-
-
-    // —— Player Performance Chart —— 
-    new Chart(
-      document.getElementById('playerChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: {{ player_names|tojson }},
-          datasets: [
-            {
-              label: 'Matches Played',
-              data: {{ player_played|tojson }},
-              backgroundColor: 'rgba(75,192,192,0.6)'
-            },
-            {
-              label: 'Wins',
-              data: {{ player_wins|tojson }},
-              backgroundColor: 'rgba(153,102,255,0.6)'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
-          }
-        }
-      }
-    );
-
-    
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Played per Player
+new Chart(document.getElementById('playedBar'), {
+  type: 'bar', data: {
+    labels: {{ player_names|tojson }},
+    datasets: [{ label: 'Played', data: {{ played_counts|tojson }}, backgroundColor: 'rgba(54,162,235,0.6)' }]
+  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+});
+// Wins vs Losses
+new Chart(document.getElementById('winLossBar'), {
+  type: 'bar', data: {
+    labels: {{ player_names|tojson }},
+    datasets: [
+      { label: 'Wins', data: {{ win_counts|tojson }}, backgroundColor: 'rgba(75,192,192,0.6)' },
+      { label: 'Losses', data: {{ loss_counts|tojson }}, backgroundColor: 'rgba(255,99,132,0.6)' }
+    ]
+  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+});
+// Monthly Trend
+new Chart(document.getElementById('trendLine'), {
+  type: 'line', data: {
+    labels: {{ monthly_labels|tojson }},
+    datasets: [
+      { label: 'Total Matches', data: {{ monthly_totals|tojson }}, fill: false, tension: 0.2 },
+      { label: 'Trend', data: {{ trend|tojson }}, fill: false, borderDash: [5,5] }
+    ]
+  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+});
+// Win Distribution Pie
+new Chart(document.getElementById('pieChart'), {
+  type: 'pie', data: {
+    labels: {{ pie_labels|tojson }},
+    datasets: [{ data: {{ pie_data|tojson }}, backgroundColor: ['rgba(255,99,132,0.6)','rgba(54,162,235,0.6)','rgba(255,206,86,0.6)','rgba(75,192,192,0.6)','rgba(153,102,255,0.6)'] }]
+  }, options: { responsive: true }
+});
+</script>
 {% endblock %}

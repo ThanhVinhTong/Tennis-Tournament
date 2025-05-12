@@ -3,9 +3,13 @@ from flask import (
     request, jsonify
 )
 from flask_login import login_required, current_user
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import func, desc
 from collections import defaultdict
+import statistics
+
+
+
 
 from app import db
 from app.main import bp
@@ -34,7 +38,7 @@ def index():
     """
     if current_user.is_authenticated:
         return render_template('main/home.html', is_authenticated=True)
-    return render_template('auth/login.html', is_authenticated=False)
+    return redirect(url_for('auth.login'))
 
 @bp.route('/api/matches', methods=['GET'])
 def get_matches():
@@ -286,123 +290,114 @@ def upload_confirm():
 @bp.route('/view_stats')
 @login_required
 def view_stats():
-   # —— 1. Personal own + private sharing —— #
-    own = (MatchResult.query
-           .filter_by(user_id=current_user.id)
-           .order_by(desc(MatchResult.match_date))
-           .all())
-    private_shared = [
-        sr.match_result for sr in
-        ShareResult.query
-                   .filter_by(recipient_id=current_user.id, is_public=False)
-                   .order_by(desc(ShareResult.timestamp))
-                   .all()
-    ]
-    personal = sorted(own + private_shared,
-                      key=lambda r: r.match_date, reverse=True)
+    # 全库用户可见比赛（自己和私密分享）
+    own = MatchResult.query.filter_by(user_id=current_user.id).all()
+    shared = [sr.match_result for sr in ShareResult.query.filter_by(
+        recipient_id=current_user.id, is_public=False).all()]
+    matches = sorted(own + shared, key=lambda m: m.match_date)
 
-    total  = len(personal)
-    # Find the Player.id corresponding to the current user
-    user_player = Player.query.filter_by(name=current_user.username).first()
-    pid = user_player.id if user_player else None
-    # Calculate wins and losses
-    wins   = sum(1 for r in personal if r.winner_id == pid)
-    losses = total - wins
-    stats  = {
-        'total_matches':  total,
-        'win_count':      wins,
-        'win_percentage': f"{(wins/total*100):.1f}%" if total else "0.0%",
-        'win_loss_ratio': f"{wins}:{losses}"
-    }
+    # KPI 1: 总比赛数
+    total_matches = len(matches)
 
-    # Line chart data
-    rev = list(reversed(personal))
-    chart_labels = [r.match_date.strftime('%b %Y') for r in rev]
-    chart_won    = [1 if r.winner_id == pid else 0 for r in rev]
-    chart_lost   = [1 if r.winner_id != pid else 0 for r in rev]
-    recent5      = personal[:5]
+    # 月度比赛统计
+    month_counts = {}
+    for m in matches:
+        key = m.match_date.strftime('%Y-%m')
+        month_counts[key] = month_counts.get(key, 0) + 1
+    busiest_month = max(month_counts, key=month_counts.get) if month_counts else ''
+    avg_per_month = round(total_matches / len(month_counts), 1) if month_counts else 0
 
-    # —— 2. Global ranking: sort by player wins —— #
-    user_win_counts = (
-        db.session.query(
-            Player.name.label('username'),
-            func.count(MatchResult.id).label('win_count')
-        )
-        .join(MatchResult, MatchResult.winner_id == Player.id)
-        .group_by(Player.name)
-        .order_by(desc('win_count'))
-        .all()
-    )
-    global_ranking = [
-        {'username': name, 'win_count': cnt}
-        for name, cnt in user_win_counts
-    ]
-    user_rank = next((i+1 for i,u in enumerate(global_ranking)
-                      if u['username']==current_user.username), None)
+    # 玩家统计
+    players = Player.query.all()
+    player_names = [p.name for p in players]
+    played_counts = []
+    win_counts = []
+    loss_counts = []
+    win_pcts = []
 
-    # —— 3. Player participation & win rate statistics —— #
-    # First take out all the participation IDs
-    subq_participants = (
-        db.session.query(MatchResult.player1_id.label('pid'))
-        .union_all(
-            db.session.query(MatchResult.player2_id.label('pid'))
-        )
-        .subquery()
-    )
-    # Number of appearances
-    played_stats = (
-        db.session.query(
-            Player.name.label('player'),
-            func.count().label('played')
-        )
-        .join(subq_participants, Player.id == subq_participants.c.pid)
-        .group_by(Player.name)
-        .subquery()
-    )
-    # Number of wins
-    wins_stats = (
-        db.session.query(
-            Player.name.label('player'),
-            func.count().label('wins')
-        )
-        .join(MatchResult, MatchResult.winner_id == Player.id)
-        .group_by(Player.name)
-        .subquery()
-    )
-    # Combine appearances and wins to calculate win rate
-    stats_players = (
-        db.session.query(
-            played_stats.c.player,
-            played_stats.c.played,
-            func.coalesce(wins_stats.c.wins, 0).label('wins'),
-            (func.coalesce(wins_stats.c.wins, 0)
-             / played_stats.c.played * 100).label('win_pct')
-        )
-        .outerjoin(wins_stats, played_stats.c.player == wins_stats.c.player)
-        .order_by(desc(played_stats.c.played))
-        .all()
-    )
-    player_names   = [r.player   for r in stats_players]
-    player_played  = [r.played   for r in stats_players]
-    player_wins    = [r.wins     for r in stats_players]
-    player_win_pct = [round(r.win_pct,1) for r in stats_players]
+    for p in players:
+        played = db.session.query(func.count(MatchResult.id)).filter(
+            (MatchResult.player1_id == p.id) | (MatchResult.player2_id == p.id)
+        ).scalar() or 0
+        wins = db.session.query(func.count(MatchResult.id)).filter(
+            MatchResult.winner_id == p.id
+        ).scalar() or 0
+        losses = played - wins
+        pct = round((wins / played * 100), 1) if played else 0
+        played_counts.append(played)
+        win_counts.append(wins)
+        loss_counts.append(losses)
+        win_pcts.append(pct)
 
-    return render_template(
-        'main/view_stats.html',
-        stats=stats,
-        chart_labels=chart_labels,
-        chart_won=chart_won,
-        chart_lost=chart_lost,
-        recent_results=recent5,
-        user_rank=user_rank,
-        global_ranking=global_ranking,
+    # KPI 2 & 3: 胜率最高/最低
+    if win_pcts:
+        max_i = win_pcts.index(max(win_pcts))
+        min_i = win_pcts.index(min(win_pcts))
+        highest_win_player = player_names[max_i]
+        highest_win_pct = win_pcts[max_i]
+        lowest_win_player = player_names[min_i]
+        lowest_win_pct = win_pcts[min_i]
+    else:
+        highest_win_player = lowest_win_player = ''
+        highest_win_pct = lowest_win_pct = 0
+
+    # 月度趋势折线
+    monthly_labels = sorted(month_counts.keys())
+    monthly_totals = [month_counts[m] for m in monthly_labels]
+    # 回归趋势线计算
+    n = len(monthly_totals)
+    xs = list(range(n))
+    ys = monthly_totals
+    if n >= 2:
+        xm = sum(xs) / n; ym = sum(ys) / n
+        num = sum((x-xm)*(y-ym) for x,y in zip(xs,ys))
+        den = sum((x-xm)**2 for x in xs)
+        slope = num/den if den else 0
+        intercept = ym - slope*xm
+        trend = [round(slope*x + intercept,1) for x in xs]
+    else:
+        trend = monthly_totals
+
+    # 饼图：胜场占比
+    pie_labels = player_names
+    pie_data = win_counts
+
+    # 胜场排行榜
+    leaderboard = sorted(
+        [{'player': player_names[i], 'wins': win_counts[i]} for i in range(len(player_names))],
+        key=lambda x: x['wins'], reverse=True
+    )
+
+    return render_template('main/view_stats.html',
+        # KPI
+        total_matches=total_matches,
+        busiest_month=busiest_month,
+        avg_per_month=avg_per_month,
+        highest_win_player=highest_win_player,
+        highest_win_pct=highest_win_pct,
+        lowest_win_player=lowest_win_player,
+        lowest_win_pct=lowest_win_pct,
+        # Player stats
         player_names=player_names,
-        player_played=player_played,
-        player_wins=player_wins,
-        player_win_pct=player_win_pct
+        played_counts=played_counts,
+        win_counts=win_counts,
+        loss_counts=loss_counts,
+        # Monthly trend
+        monthly_labels=monthly_labels,
+        monthly_totals=monthly_totals,
+        trend=trend,
+        # Pie
+        pie_labels=pie_labels,
+        pie_data=pie_data,
+        # Leaderboard
+        leaderboard=leaderboard
     )
 
-
+    
+    
+    
+    
+    
 # —— received_results part —— #
 @bp.route('/received_results')
 @login_required

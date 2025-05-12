@@ -12,7 +12,7 @@
         {% for m in private_matches %}
         <tr>
           <td>{{ m.match_date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ m.tournament_name }}</td>
+          <td>{{ m.tournament }}</td>
           <td>{{ m.player1 }} vs {{ m.player2 }}</td>
           <td>{{ m.score }}</td>
           <td>{{ m.winner }}</td>
@@ -24,4 +24,18 @@
     <p class="text-muted">No private results shared with you yet.</p>
   {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const socket = io();
+
+      // Listen for backend new_share events
+      socket.on('new_share', data => {
+        alert(`🔔 ${data.from} 已与您分享 ${data.match_ids.length} 场比赛`);
+        // Automatically refresh the current page and update the "Received Results" table
+        location.reload();
+      });
+    });
+  </script>
 {% endblock %}

@@ -25,7 +25,7 @@
 <div class="container-fluid">
   <h2 class="mb-4">Match Analytics Dashboard</h2>
 
-  <!-- KPI 卡片 -->
+  <!-- KPI cards -->
   <div class="row mb-4">
     {% set cards = [
       ('Total Matches', total_matches),
@@ -46,30 +46,33 @@
     {% endfor %}
   </div>
 
-  <!-- 胜场排行榜 -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header bg-secondary text-white">Win Leaderboard</div>
-        <div class="card-body table-responsive">
-          <table class="table table-striped mb-0">
-            <thead><tr><th>Rank</th><th>Player</th><th>Wins</th></tr></thead>
-            <tbody>
-              {% for entry in leaderboard %}
-              <tr>
-                <td>#{{ loop.index }}</td>
-                <td>{{ entry.player }}</td>
-                <td>{{ entry.wins }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  <!-- Win Leaderboard -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white">Win Leaderboard</div>
+    <div class="card-body p-0">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Wins</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in leaderboard %}
+          <tr>
+            <td>#{{ loop.index }}</td>
+            <td>{{ entry.player }}</td>
+            <td>{{ entry.wins }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <!-- 图表区域 -->
+
+  <!-- Chart Area -->
   <div class="row">
     <!-- Bar: Matches Played per Player -->
     <div class="col-lg-6 mb-4">

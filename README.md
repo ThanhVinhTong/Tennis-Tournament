@@ -22,8 +22,6 @@ Built with:
 
 Student name: Zhenhao Zhu           Student ID: 24065267            Github: dynamicCat
 
-
-
 ## Prerequisites
 
 * Python 3.7 or higher
@@ -52,17 +50,16 @@ Student name: Zhenhao Zhu           Student ID: 24065267            Github: dyna
 
 ## Running the Application
 
-1. **Set environment variable for Flask**
-   ```bash
-   export FLASK_APP=run.py        # macOS/Linux
-   set FLASK_APP=run.py           # Windows PowerShell
-   ```
-2. **Run the Flask server**
-   ```bash
-   flask db upgrade
-   flask run
-   ```
-3. **Access the app** Open your browser and navigate to `http://127.0.0.1:5000/`.
+
+1. **Run the Flask server**
+
+```bash
+flask db upgrade
+python run.py
+```
+
+2. **Access the app** Open your browser and navigate to `http://0.0.0.0:5001`.
+
 
 ## Reminder
 

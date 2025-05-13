@@ -20,7 +20,7 @@ def login():
         login_user(user)
         flash('Login successful', 'success')
         next_page = request.args.get('next')
-        return redirect(next_page) if next_page else redirect(url_for('main.upload'))
+        return redirect(next_page) if next_page else redirect(url_for('main.home'))
     return render_template('auth/login.html', form=form)
 
 @bp.route('/register', methods=['GET', 'POST'])

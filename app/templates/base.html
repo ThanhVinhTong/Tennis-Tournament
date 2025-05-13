@@ -234,8 +234,8 @@
       const socket = io();
       socket.on('new_share', data => {
         // data = { from: 'Alice', match_ids: [...] }
-        alert(`🔔 ${data.from} 已与您分享 ${data.match_ids.length} 条比赛结果`);
-        // 如果需要，您可以在这里调用 AJAX 更新“接收的数据”列表
+        alert(`🔔 ${data.from} ${data.match_ids.length} match results have been shared with you`);
+        // If needed, you can call AJAX here to update the "Received Data" list
       });
     });
   </script>

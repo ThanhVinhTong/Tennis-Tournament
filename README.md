@@ -61,7 +61,7 @@ flask db upgrade
 python run.py
 ```
 
-2. **Access the app** Open your browser and navigate to `http://0.0.0.0:5001`.
+2. **Access the app** Open your browser and navigate to `http://0.0.0.0:5001` (mac) / `http://127.0.0.1:5001`(windows)
 
 
 ## Reminder

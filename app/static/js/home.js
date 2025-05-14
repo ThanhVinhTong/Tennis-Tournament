@@ -127,12 +127,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const importMatchForm = document.getElementById('importMatchForm');
     if (importMatchForm) {
+        initializePlayerDropdowns();
+
         importMatchForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             const formData = {
                 title: document.getElementById('title').value,
-                players: document.getElementById('players').value,
+                players: `${document.getElementById('player1').value} vs ${document.getElementById('player2').value}`,
                 time: document.getElementById('time').value,
                 court: document.getElementById('court').value,
                 match_date: document.getElementById('match_date').value,
@@ -164,4 +166,62 @@ document.addEventListener('DOMContentLoaded', function () {
     yearSelect.addEventListener('change', updateCalendar);
 
     showCalendar(2025, 4);
+
+    async function fetchPlayers() {
+        try {
+            const response = await fetch('/api/players');
+            if (!response.ok) {
+                throw new Error('Failed to fetch players');
+            }
+            const players = await response.json();
+            return players;
+        } catch (error) {
+            console.error('Error fetching players:', error);
+            return [];
+        }
+    }
+
+    function createPlayerDropdown(players, elementId) {
+        const select = document.getElementById(elementId);
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">Select Player</option>';
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.name;
+            option.textContent = player.name;
+            select.appendChild(option);
+        });
+    }
+
+    async function initializePlayerDropdowns() {
+        const players = await fetchPlayers();
+        const playerInputs = document.querySelectorAll('.player-input');
+        
+        playerInputs.forEach(input => {
+            const select = document.createElement('select');
+            select.className = input.className;
+            select.id = input.id;
+            select.required = input.required;
+            input.parentNode.replaceChild(select, input);
+            createPlayerDropdown(players, select.id);
+        });
+    }
+
+    // Fetch and update statistics
+    function updateStatistics() {
+        fetch('/api/general_statistics')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('matches-played-count').textContent = data.matches_played ?? '-';
+                document.getElementById('active-players-count').textContent = data.active_players ?? '-';
+                document.getElementById('tournaments-count').textContent = data.tournaments_count ?? '-';
+            })
+            .catch(() => {
+                document.getElementById('matches-played-count').textContent = '-';
+                document.getElementById('active-players-count').textContent = '-';
+                document.getElementById('tournaments-count').textContent = '-';
+            });
+    }
+    updateStatistics();
 });

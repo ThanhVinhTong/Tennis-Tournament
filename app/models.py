@@ -84,30 +84,12 @@ class ShareResult(db.Model):
             f'from {self.sender_id} to {self.recipient_id} ' 
             f'public={self.is_public}>'
         )
-
-
-class MatchCalendar(db.Model):
-    """
-    Model for storing scheduled tennis matches, private to each user
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    players = db.Column(db.String(200), nullable=False)
-    time = db.Column(db.String(5), nullable=False)  # Format: "HH:MM"
-    court = db.Column(db.String(50), nullable=False)
-    match_date = db.Column(db.DateTime, nullable=False)
-    month = db.Column(db.Integer, nullable=False)  # Month of the match
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-    def __repr__(self):
-        return (f'<ShareResult match {self.match_result_id} '
-                f'from {self.sender_id} to {self.recipient_id} '
-                f'public={self.is_public}>')
     
 class MatchCalendar(db.Model):
     """
     Model for storing scheduled tennis matches, private to each user
     """
+    __tablename__ = 'match_calendar'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     players = db.Column(db.String(200), nullable=False)

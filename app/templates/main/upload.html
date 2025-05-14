@@ -2,11 +2,30 @@
 {% block title %}Enter Results{% endblock %}
 
 {% block content %}
-<div class="row">
-  <!-- Manual Entry -->
-  <div class="col-lg-6 grid-margin stretch-card">
+<style>
+body {
+    background: #f5f7fa;
+}
+.card {
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), 0 1.5px 3px rgba(60,60,60,0.05);
+    border-radius: 18px;
+    border: none;
+    background: #fff;
+    transition: box-shadow 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.18), 0 3px 6px rgba(60,60,60,0.08);
+}
+</style>
+<div class="row p-4">
+  <!-- Manual Entry (now full width) -->
+  <div class="col-lg-8 mx-auto grid-margin stretch-card">
     <div class="card"><div class="card-body">
       <h4 class="card-title">Manual Entry</h4>
+      <!-- Batch CSV Upload Button -->
+      <button type="button" class="btn btn-secondary mb-4" data-bs-toggle="modal" data-bs-target="#csvUploadModal">
+        Batch CSV Upload
+      </button>
       <form method="post"
             action="{{ url_for('main.upload') }}"
             enctype="multipart/form-data">
@@ -70,25 +89,33 @@
     </div></div>
   </div>
 
-  <!-- CSV Batch Upload -->
-  <div class="col-md-6">
-    <div class="card mb-4"><div class="card-header bg-primary text-white">
-      Batch CSV Upload
-    </div><div class="card-body">
-      <form method="post"
-            action="{{ url_for('main.upload') }}"
-            enctype="multipart/form-data">
-        {{ upload_form.hidden_tag() }}
-        <div class="mb-3">
-          {{ upload_form.csv_file.label }}
-          {{ upload_form.csv_file(class="form-control-file") }}
-          {% for e in upload_form.csv_file.errors %}
-            <div class="text-danger">{{ e }}</div>
-          {% endfor %}
-        </div>
-        {{ upload_form.submit_csv(class="btn btn-primary") }}
-      </form>
-    </div></div>
+<!-- Batch CSV Upload Modal -->
+<div class="modal fade" id="csvUploadModal" tabindex="-1" aria-labelledby="csvUploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="csvUploadModalLabel">Batch CSV Upload</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3 text-muted">Upload a CSV file to enter multiple match results at once. Please ensure your file follows the required format.</p>
+        <form method="post"
+              action="{{ url_for('main.upload') }}"
+              enctype="multipart/form-data">
+          {{ upload_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ upload_form.csv_file.label(class="form-label") }}
+            {{ upload_form.csv_file(class="form-control") }}
+            {% for e in upload_form.csv_file.errors %}
+              <div class="text-danger">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="mt-4">
+            {{ upload_form.submit_csv(class="btn btn-primary w-100") }}
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

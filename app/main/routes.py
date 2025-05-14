@@ -1,6 +1,6 @@
 from flask import (
     render_template, redirect, url_for, flash,
-    request, jsonify
+    request, jsonify, abort
 )
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
@@ -469,6 +469,13 @@ def api_matches_by_date():
     ])
 
 
+@bp.route('/api/players')
+def get_players():
+    """Get all players from the database"""
+    players = Player.query.order_by(Player.name).all()
+    return jsonify([{'id': p.id, 'name': p.name} for p in players])
+
+
 # —— share part —— #
 # —— WebSocket —— #
 @socketio.on('connect')
@@ -504,7 +511,7 @@ def share():
                 'winner':     w.name if w else '-'
             })
 
-        # ——— 2. “Share to me” contest — Allow me to repost them
+        # ——— 2. "Share to me" contest — Allow me to repost them
         incoming = (
             ShareResult.query
                        .filter_by(recipient_id=current_user.id, is_public=False)
@@ -612,3 +619,27 @@ def unshare(share_id):
     db.session.commit()
     flash('Share record removed.', 'info')
     return redirect(url_for('main.share'))
+
+@bp.route('/api/general_statistics')
+def api_statistics():
+    # Count total matches played
+    matches_played = MatchResult.query.count()
+
+    # Count all players
+    active_players = Player.query.count()
+
+    # Count unique tournament names
+    tournaments_count = db.session.query(MatchResult.tournament_name).distinct().count()
+
+    return jsonify({
+        'matches_played': matches_played,
+        'active_players': active_players,
+        'tournaments_count': tournaments_count
+    })
+
+@bp.route('/bulk_delete_players', methods=['POST'])
+def bulk_delete_players():
+    player_ids = request.form.getlist('player_ids')
+    # Delete players with these IDs from the database
+    # Add a flash message
+    return redirect(url_for('main.manage_players'))

@@ -7,6 +7,8 @@
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -64,7 +66,7 @@
       display: flex;
       align-items: center;
       padding: 0 1rem;
-      z-index: 2001;
+      z-index: 1040;
       transition: left .3s cubic-bezier(.4,0,.2,1);
     }
     body.sidebar-collapsed .navbar { left: 0px; }
@@ -103,6 +105,38 @@
     .btn-featured:hover {
       opacity: 0.9;
     }
+
+    @media (max-width: 991.98px) {
+      body {
+        padding-left: 0 !important;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+        width: 240px;
+        left: 0;
+        z-index: 3000;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+      .navbar {
+        left: 0 !important;
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 2999;
+      }
+      .sidebar-backdrop.show {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
@@ -117,57 +151,65 @@
         <div class="small text-warning">Rank: #{{ user_rank }}</div>
         {% endif %}
       </div>
-      <ul class="nav flex-column">
+      <ul class="nav flex-column" style="flex-grow:1;">
         <!-- Home -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.home' %}active{% endif %}"
-             href="{{ url_for('main.home') }}">
-            <i data-feather="home"></i><span>Home</span>
+             href="{{ url_for('main.home') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+            <i class="bi bi-house-door"></i><span class="ms-2">Home</span>
           </a>
         </li>
         <!-- Manage Players -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.manage_players' %}active{% endif %}"
-             href="{{ url_for('main.manage_players') }}">
-            <i data-feather="users"></i><span>Manage Players</span>
+             href="{{ url_for('main.manage_players') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Manage Players">
+            <i class="bi bi-people"></i><span class="ms-2">Manage Players</span>
           </a>
         </li>
         <!-- Enter Results -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.upload' %}active{% endif %}"
-             href="{{ url_for('main.upload') }}">
-            <i data-feather="file"></i><span>Enter Results</span>
+             href="{{ url_for('main.upload') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Upload Match Results">
+            <i class="bi bi-upload"></i><span class="ms-2">Upload Match Results</span>
           </a>
         </li>
         <!-- View Statistics -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.view_stats' %}active{% endif %}"
-             href="{{ url_for('main.view_stats') }}">
-            <i data-feather="bar-chart-2"></i><span>View Statistics</span>
+             href="{{ url_for('main.view_stats') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="View Statistics">
+            <i class="bi bi-bar-chart"></i><span class="ms-2">View Statistics</span>
           </a>
         </li>
         <!-- Share Results -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.share' %}active{% endif %}"
-             href="{{ url_for('main.share') }}">
-            <i data-feather="share-2"></i><span>Share Results</span>
+             href="{{ url_for('main.share') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Share Results">
+            <i class="bi bi-share"></i><span class="ms-2">Share Results</span>
           </a>
         </li>
         <!-- Received Data -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint=='main.received_results' %}active{% endif %}"
-             href="{{ url_for('main.received_results') }}">
-            <i data-feather="inbox"></i><span>Received Data</span>
+             href="{{ url_for('main.received_results') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Received Data">
+            <i class="bi bi-inbox"></i><span class="ms-2">Received Data</span>
           </a>
         </li>
       </ul>
+      <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+          <p class="mb-0">&copy; 2025 Group 60. All rights reserved.</p>
+        </div>
+      </footer>
     </nav>
 
     <!-- Main Content & Top Bar -->
     <div class="main-content" style="min-height: calc(100vh - 64px - 80px);">
       <nav class="navbar">
-        <button class="sidebar-toggle" id="toggleSidebar">
-          <i data-feather="menu"></i>
+        <button class="sidebar-toggle d-lg-none" id="toggleSidebarMobile" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Sidebar">
+          <i class="bi bi-list"></i>
+        </button>
+        <button class="sidebar-toggle d-none d-lg-flex" id="toggleSidebar" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Sidebar">
+          <i class="bi bi-list"></i>
         </button>
 
         <div class="ms-auto d-flex align-items-center">
@@ -176,24 +218,24 @@
               <a class="btn btn-sm btn-outline-primary me-2"
                  href="{{ url_for('main.upload') }}">Go to System</a>
               <button class="btn btn-sm btn-outline-secondary"
-                      onclick="location.href='{{ url_for('auth.logout') }}'">
-                <i data-feather="power"></i> Logout
+                      onclick="location.href='{{ url_for('auth.logout') }}'" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Logout">
+                <i class="bi bi-box-arrow-right"></i> Logout
               </button>
             {% else %}
               <a class="btn btn-sm btn-primary me-2"
-                 href="{{ url_for('auth.login') }}">Login</a>
+                 href="{{ url_for('auth.login') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
               <a class="btn btn-sm btn-outline-secondary"
-                 href="{{ url_for('auth.register') }}">Register</a>
+                 href="{{ url_for('auth.register') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Register"><i class="bi bi-person-plus"></i> Register</a>
             {% endif %}
           {% else %}
             {% if current_user.is_authenticated %}
               <button class="btn btn-sm btn-outline-secondary"
-                      onclick="location.href='{{ url_for('auth.logout') }}'">
-                <i data-feather="power"></i> Logout
+                      onclick="location.href='{{ url_for('auth.logout') }}'" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Logout">
+                <i class="bi bi-box-arrow-right"></i> Logout
               </button>
             {% else %}
               <a class="btn btn-sm btn-primary"
-                 href="{{ url_for('auth.login') }}">Login</a>
+                 href="{{ url_for('auth.login') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
             {% endif %}
           {% endif %}
         </div>
@@ -218,10 +260,31 @@
   <script src="https://unpkg.com/feather-icons"></script>
   <script>feather.replace()</script>
   <script>
+    // Desktop sidebar collapse
     document.getElementById('toggleSidebar').addEventListener('click', e => {
       e.preventDefault();
       document.body.classList.toggle('sidebar-collapsed');
       document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+    // Mobile sidebar overlay
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const toggleSidebarMobile = document.getElementById('toggleSidebarMobile');
+    function closeSidebarMobile() {
+      sidebar.classList.remove('show');
+      sidebarBackdrop.classList.remove('show');
+    }
+    toggleSidebarMobile.addEventListener('click', function(e) {
+      e.preventDefault();
+      sidebar.classList.add('show');
+      sidebarBackdrop.classList.add('show');
+    });
+    sidebarBackdrop.addEventListener('click', closeSidebarMobile);
+    // Hide sidebar on resize to large
+    window.addEventListener('resize', function() {
+      if(window.innerWidth >= 992) {
+        closeSidebarMobile();
+      }
     });
   </script>
 
@@ -240,11 +303,29 @@
     });
   </script>
 
-  <!-- Footer -->
-  <footer class="footer bg-dark text-white py-4">
-    <div class="container text-center">
-      <p class="mb-0">&copy; 2025 Group 60. All rights reserved.</p>
-    </div>
-  </footer>
+  <script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Hide tooltip immediately on mouseout for sidebar toggle buttons
+    var toggleSidebarBtn = document.getElementById('toggleSidebar');
+    if (toggleSidebarBtn) {
+      toggleSidebarBtn.addEventListener('mouseleave', function() {
+        var tooltipInstance = bootstrap.Tooltip.getInstance(toggleSidebarBtn);
+        if (tooltipInstance) tooltipInstance.hide();
+      });
+    }
+    var toggleSidebarMobileBtn = document.getElementById('toggleSidebarMobile');
+    if (toggleSidebarMobileBtn) {
+      toggleSidebarMobileBtn.addEventListener('mouseleave', function() {
+        var tooltipInstance = bootstrap.Tooltip.getInstance(toggleSidebarMobileBtn);
+        if (tooltipInstance) tooltipInstance.hide();
+      });
+    }
+  </script>
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 </body>
 </html>

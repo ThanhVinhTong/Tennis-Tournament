@@ -1,9 +1,20 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
 
+class Player(db.Model):
+    __tablename__ = 'player'
+    id         = db.Column(db.Integer, primary_key=True)
+    name       = db.Column(db.String(80), unique=True, nullable=False)
+    country    = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
+    def __repr__(self):
+        return f'<Player {self.name}>'
+
 class User(UserMixin, db.Model):
+     __tablename__ = 'user'
     id           = db.Column(db.Integer, primary_key=True)
     username     = db.Column(db.String(64), unique=True, index=True, nullable=False)
     email        = db.Column(db.String(120), unique=True, index=True, nullable=False)
@@ -39,6 +50,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class MatchResult(db.Model):
+    __tablename__ = 'match_result'
     id              = db.Column(db.Integer, primary_key=True)
     tournament_name = db.Column(db.String(128), nullable=False)
     match_date      = db.Column(db.DateTime, default=datetime.utcnow)
@@ -48,10 +60,15 @@ class MatchResult(db.Model):
     winner          = db.Column(db.String(64), nullable=False)
     user_id         = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __repr__(self):
-        return f'<MatchResult {self.tournament_name} #{self.id}>'
+     def __repr__(self):
+        return (
+            f'<MatchResult id={self.id} ' 
+            f'{self.player1_id} vs {self.player2_id} ' 
+            f'on {self.match_date.date()}>'
+        )
 
 class ShareResult(db.Model):
+      __tablename__ = 'share_result'
     id               = db.Column(db.Integer, primary_key=True)
     match_result_id  = db.Column(db.Integer, db.ForeignKey('match_result.id'), nullable=False)
     sender_id        = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -65,3 +82,35 @@ class ShareResult(db.Model):
         return (f'<ShareResult match {self.match_result_id} '
                 f'from {self.sender_id} to {self.recipient_id} '
                 f'public={self.is_public}>')
+    
+class MatchCalendar(db.Model):
+    """
+    Model for storing scheduled tennis matches, private to each user
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    players = db.Column(db.String(200), nullable=False)
+    time = db.Column(db.String(5), nullable=False)  # Format: "HH:MM"
+    court = db.Column(db.String(50), nullable=False)
+    match_date = db.Column(db.DateTime, nullable=False)
+    month = db.Column(db.Integer, nullable=False)  # Month of the match
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Match {self.title} - {self.match_date.strftime("%Y-%m-%d")} for User {self.user_id}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'players': self.players,
+            'time': self.time,
+            'court': self.court,
+            'match_date': self.match_date.strftime('%Y-%m-%d'),
+            'month': self.month,
+            'user_id': self.user_id
+        }
+    
+    def get_month(self):
+        return self.month
+

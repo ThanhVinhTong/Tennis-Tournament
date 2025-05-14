@@ -469,6 +469,13 @@ def api_matches_by_date():
     ])
 
 
+@bp.route('/api/players')
+def get_players():
+    """Get all players from the database"""
+    players = Player.query.order_by(Player.name).all()
+    return jsonify([{'id': p.id, 'name': p.name} for p in players])
+
+
 # —— share part —— #
 # —— WebSocket —— #
 @socketio.on('connect')
@@ -504,7 +511,7 @@ def share():
                 'winner':     w.name if w else '-'
             })
 
-        # ——— 2. “Share to me” contest — Allow me to repost them
+        # ——— 2. "Share to me" contest — Allow me to repost them
         incoming = (
             ShareResult.query
                        .filter_by(recipient_id=current_user.id, is_public=False)

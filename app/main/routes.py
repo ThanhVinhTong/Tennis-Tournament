@@ -624,7 +624,7 @@ def unshare(share_id):
 def api_statistics():
     # Count total matches played
     matches_played = MatchResult.query.count()
-    
+
     # Count all players
     active_players = Player.query.count()
 
@@ -636,3 +636,10 @@ def api_statistics():
         'active_players': active_players,
         'tournaments_count': tournaments_count
     })
+
+@bp.route('/bulk_delete_players', methods=['POST'])
+def bulk_delete_players():
+    player_ids = request.form.getlist('player_ids')
+    # Delete players with these IDs from the database
+    # Add a flash message
+    return redirect(url_for('main.manage_players'))

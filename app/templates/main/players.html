@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Manage Players{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 manage-players-section">
   <h3>🎾 Manage Players</h3>
 
-  <form method="POST" class="row g-3 mb-4">
+  <form method="POST" class="row g-3 mb-4 align-items-end">
     {{ form.hidden_tag() }}
-    <div class="col-md-6">
+    <div class="col-md-5">
       {{ form.name.label(class="form-label") }}
       {{ form.name(class="form-control") }}
     </div>
-    <div class="col-md-4">
+    <div class="col-md-5">
       {{ form.country.label(class="form-label") }}
       {{ form.country(class="form-control") }}
     </div>
-    <div class="col-md-2 align-self-end">
-      {{ form.submit(class="btn btn-primary") }}
+    <div class="col-md-2 d-flex align-items-end">
+      {{ form.submit(class="btn btn-success w-100 h-100") }}
     </div>
   </form>
 

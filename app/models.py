@@ -1,6 +1,5 @@
-# app/models.py
+from datetime import datetime, UTC
 
-from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
@@ -10,10 +9,11 @@ class Player(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(80), unique=True, nullable=False)
     country    = db.Column(db.String(80), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     def __repr__(self):
         return f'<Player {self.name}>'
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -79,7 +79,6 @@ class ShareResult(db.Model):
     match_result = db.relationship('MatchResult', backref='shares')
 
     def __repr__(self):
-
         return (
             f'<ShareResult match {self.match_result_id} ' 
             f'from {self.sender_id} to {self.recipient_id} ' 
@@ -101,7 +100,22 @@ class MatchCalendar(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Match {self.title} - {self.match_date.strftime("%Y-%m-%d")} for User {self.user_id}>'
+        return (f'<ShareResult match {self.match_result_id} '
+                f'from {self.sender_id} to {self.recipient_id} '
+                f'public={self.is_public}>')
+    
+class MatchCalendar(db.Model):
+    """
+    Model for storing scheduled tennis matches, private to each user
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    players = db.Column(db.String(200), nullable=False)
+    time = db.Column(db.String(5), nullable=False)  # Format: "HH:MM"
+    court = db.Column(db.String(50), nullable=False)
+    match_date = db.Column(db.DateTime, nullable=False)
+    month = db.Column(db.Integer, nullable=False)  # Month of the match
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def to_dict(self):
         return {

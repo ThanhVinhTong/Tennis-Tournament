@@ -2,12 +2,35 @@
 
 /* —— Theme color —— */
 :root {
-  --sa-primary:    #4e73df;
-  --sa-primary-50: #f0f3ff;
-  --sa-grey:       #858796;
-  --sa-light:      #f8f9fc;
+  --blue: #007bff;
+  --indigo: #6610f2;
+  --purple: #6f42c1;
+  --pink: #e83e8c;
+  --red: #dc3545;
+  --orange: #fd7e14;
+  --yellow: #ffc107;
+  --green: #28a745;
+  --teal: #20c997;
+  --cyan: #17a2b8;
+  --white: #fff;
+  --gray: #6c757d;
+  --gray-dark: #343a40;
+  --primary: #74bb26;
+  --secondary: #111111;
+  --success: #28a745;
+  --info: #17a2b8;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --light: #ffffff;
+  --dark: #343a40;
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --font-family-sans-serif: "Montserrat", sans-serif;
+  --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
 }
-
 /* —— Global & Layout —— */
 * {
   box-sizing: border-box;
@@ -218,9 +241,9 @@ canvas {
 
 /* —— Footer —— */
 .footer {
-  position: fixed;
+  /* position: fixed; */
   bottom: 0;
-  left: 240px;    
+  /* left: 240px;     */
   right: 0;
   background: #fff;
   border-top: 1px solid var(--sa-grey);
@@ -229,10 +252,11 @@ canvas {
   font-size: 0.875rem;
   color: var(--sa-grey);
   z-index: 2001;
+  display: block;
 }
 
 body.sidebar-collapsed .footer {
-  left: 56px;    
+  left: 0%;    
 }
 
 
@@ -246,9 +270,6 @@ body.sidebar-collapsed .footer {
   }
   .navbar {
       left: 56px;
-  }
-  .footer {
-      margin-left: 56px;
   }
 }
 
@@ -265,4 +286,30 @@ button:focus {
   background-color: var(--sa-grey) !important;
   border-color: var(--sa-grey) !important;
   color: #fff;
+}
+
+/* —— 全局固定 Footer —— */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 240px;      /* 与侧边栏对齐 */
+  right: 0;
+  z-index: 1000;    /* 确保在底层 */
+}
+
+/* 收起侧边栏时，Footer 也要缩进 */
+body.sidebar-collapsed .footer {
+  left: 56px;
+}
+
+/* —— 给主体内容留出足够的底部空间，避免被 Footer 遮挡 —— */
+.content-wrapper {
+  /* 原有 padding 不变，只在底部多加 Footer 高度(约64px)+一点间距 */
+  padding-bottom: calc(1.5rem + 64px + 1rem);
+}
+
+/* —— 调整 Share 页面左右内边距 —— */
+.content-wrapper .container-fluid {
+  padding-left: 2rem;
+  padding-right: 2rem;
 }

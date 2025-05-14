@@ -6,10 +6,15 @@ from flask_wtf.file import FileRequired, FileAllowed
 import datetime
 
 
+class PlayerForm(FlaskForm):
+    name    = StringField('Player Name', validators=[DataRequired()])
+    country = StringField('Country', validators=[Optional()])
+    submit  = SubmitField('Add Player')
+    
 class MatchResultForm(FlaskForm):
     tournament_name = StringField('Competition Name', validators=[DataRequired()])
-    player1         = SelectField('Player 1', choices=[], validators=[DataRequired()])
-    player2         = SelectField('Player 2', choices=[], validators=[DataRequired()])
+    player1         = SelectField('Player 1', coerce=int, validators=[DataRequired()])
+    player2         = SelectField('Player 2', coerce=int, validators=[DataRequired()])
     score1          = IntegerField('Player 1 Score', validators=[DataRequired(), NumberRange(min=0)])
     score2          = IntegerField('Player 2 Score', validators=[DataRequired(), NumberRange(min=0)])
     winner          = HiddenField()  
@@ -33,3 +38,10 @@ class UploadForm(FlaskForm):
 
 class ShareForm(FlaskForm):
     submit_share = SubmitField('Share Selected Result')
+    
+
+
+
+
+
+

@@ -20,6 +20,11 @@ Built with:
 
 ## Team Members
 
+Student name: Zhenhao Zhu           Student ID: 24065267            Github: dynamicCat
+Student name: Thanh Vinh Tong       Student ID: 22800814            Github: ThanhVinhTong
+Student name: Mei Li                Student ID: 24212345            Github: meiliyuri
+Student name: Aarthi Vadivel        Student ID: 24310357            Github: Aarthi2809
+
 ## Prerequisites
 
 * Python 3.7 or higher
@@ -48,18 +53,15 @@ Built with:
 
 ## Running the Application
 
-1. **Set environment variable for Flask**
-   ```bash
-   export FLASK_APP=run.py        # macOS/Linux
-   set FLASK_APP=run.py           # Windows PowerShell
-   ```
-2. **Run the Flask server**
-   ```bash
-   flask db upgrade
-   flask run
-   ```
-3. **Access the app** Open your browser and navigate to `http://127.0.0.1:5000/`.
 
+1. **Run the Flask server**
+
+```bash
+flask db upgrade
+python run.py
+```
+
+2. **Access the app** Open your browser and navigate to `http://0.0.0.0:5001` (mac) / `http://127.0.0.1:5001`(windows)
 
 
 ## Reminder
@@ -69,35 +71,37 @@ Built with:
 flask db migrate -m "describe changes"
 flask db upgrade
 
-
 ## Project Structure
 
+```text
 CITS5505-Group-60-project/
 ├── app/
-│ ├── auth/ # Authentication blueprint (registration, login)
-│ │ ├── init.py
-│ │ ├── forms.py
-│ │ └── routes.py
-│ ├── errors/ # Error handling blueprint (404, 500 pages)
-│ │ ├── init.py
-│ │ └── handlers.py
-│ ├── main/ # Main function blueprint
-│ │ ├── init.py
-│ │ ├── forms.py
-│ │ └── routes.py
-│ ├── static/ # Static Resources
-│ │ ├── css/
-│ │ ├── js/
-│ │ └── images/
-│ ├── templates/ #Jinja2 Templates
-│ ├── init.py # Application create_app()
-│ └── models.py # SQLAlchemy Model
+│   ├── auth/      # Authentication blueprint (registration, login)
+│   │   ├── __init__.py
+│   │   ├── forms.py
+│   │   └── routes.py
+│   ├── errors/    # Error handling blueprint (404, 500 pages)
+│   │   ├── __init__.py
+│   │   └── handlers.py
+│   ├── main/      # Main function blueprint
+│   │   ├── __init__.py
+│   │   ├── forms.py
+│   │   └── routes.py
+│   ├── static/    # Static Resources
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── images/
+│   ├── templates/ # Jinja2 Templates
+│   ├── __init__.py # Application create_app()
+│   └── models.py   # SQLAlchemy Model
 │
-├── migrations/ # Flask-Migrate migration script
-├── app.db # SQLite database files
-├── config.py # Configuration
-├── requirements.txt # Python Dependencies
-├── run.py # Application entry
-└── README.md #
+├── migrations/        # Flask-Migrate migration script
+├── app.db             # SQLite database file
+├── config.py          # Configuration
+├── requirements.txt   # Python Dependencies
+├── run.py             # Application entry
+└── README.md
+
+```
 
 ## Running Tests

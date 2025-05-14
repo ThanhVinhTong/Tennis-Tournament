@@ -1,6 +1,6 @@
 from flask import (
     render_template, redirect, url_for, flash,
-    request, jsonify
+    request, jsonify, abort
 )
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
@@ -619,3 +619,20 @@ def unshare(share_id):
     db.session.commit()
     flash('Share record removed.', 'info')
     return redirect(url_for('main.share'))
+
+@bp.route('/api/general_statistics')
+def api_statistics():
+    # Count total matches played
+    matches_played = MatchResult.query.count()
+    
+    # Count all players
+    active_players = Player.query.count()
+
+    # Count unique tournament names
+    tournaments_count = db.session.query(MatchResult.tournament_name).distinct().count()
+
+    return jsonify({
+        'matches_played': matches_played,
+        'active_players': active_players,
+        'tournaments_count': tournaments_count
+    })

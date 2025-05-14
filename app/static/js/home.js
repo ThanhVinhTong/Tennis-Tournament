@@ -207,4 +207,21 @@ document.addEventListener('DOMContentLoaded', function () {
             createPlayerDropdown(players, select.id);
         });
     }
+
+    // Fetch and update statistics
+    function updateStatistics() {
+        fetch('/api/general_statistics')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('matches-played-count').textContent = data.matches_played ?? '-';
+                document.getElementById('active-players-count').textContent = data.active_players ?? '-';
+                document.getElementById('tournaments-count').textContent = data.tournaments_count ?? '-';
+            })
+            .catch(() => {
+                document.getElementById('matches-played-count').textContent = '-';
+                document.getElementById('active-players-count').textContent = '-';
+                document.getElementById('tournaments-count').textContent = '-';
+            });
+    }
+    updateStatistics();
 });

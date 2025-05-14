@@ -66,7 +66,7 @@
       display: flex;
       align-items: center;
       padding: 0 1rem;
-      z-index: 2001;
+      z-index: 1040;
       transition: left .3s cubic-bezier(.4,0,.2,1);
     }
     body.sidebar-collapsed .navbar { left: 0px; }
@@ -308,6 +308,22 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Hide tooltip immediately on mouseout for sidebar toggle buttons
+    var toggleSidebarBtn = document.getElementById('toggleSidebar');
+    if (toggleSidebarBtn) {
+      toggleSidebarBtn.addEventListener('mouseleave', function() {
+        var tooltipInstance = bootstrap.Tooltip.getInstance(toggleSidebarBtn);
+        if (tooltipInstance) tooltipInstance.hide();
+      });
+    }
+    var toggleSidebarMobileBtn = document.getElementById('toggleSidebarMobile');
+    if (toggleSidebarMobileBtn) {
+      toggleSidebarMobileBtn.addEventListener('mouseleave', function() {
+        var tooltipInstance = bootstrap.Tooltip.getInstance(toggleSidebarMobileBtn);
+        if (tooltipInstance) tooltipInstance.hide();
+      });
+    }
   </script>
 
   <div class="sidebar-backdrop" id="sidebarBackdrop"></div>

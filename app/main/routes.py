@@ -174,6 +174,15 @@ def manage_players():
 @login_required
 def delete_player(pid):
     p = Player.query.get_or_404(pid)
+    # Check if player is referenced in any match result
+    match_count = MatchResult.query.filter(
+        (MatchResult.player1_id == pid) |
+        (MatchResult.player2_id == pid) |
+        (MatchResult.winner_id == pid)
+    ).count()
+    if match_count > 0:
+        flash('❌ Cannot delete player: player is referenced in existing matches.', 'danger')
+        return redirect(url_for('main.manage_players'))
     db.session.delete(p)
     db.session.commit()
     flash('🗑️ Player deleted.', 'info')
@@ -506,7 +515,7 @@ def share():
                 'id':         m.id,
                 'date':       m.match_date.strftime('%Y-%m-%d'),
                 'tournament': m.tournament_name,
-                'players':    f"{p1.name or '-'} vs {p2.name or '-'}",
+                'players': f"{getattr(p1, 'name', '-') or '-'} vs {getattr(p2, 'name', '-') or '-'}",
                 'score':      m.score,
                 'winner':     w.name if w else '-'
             })

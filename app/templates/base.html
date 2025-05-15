@@ -233,7 +233,7 @@
                       onclick="location.href='{{ url_for('auth.logout') }}'" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Logout">
                 <i class="bi bi-box-arrow-right"></i> Logout
               </button>
-            {% else %}
+            {% elif request.endpoint != 'auth.login' and request.endpoint != 'auth.register' %}
               <a class="btn btn-sm btn-primary"
                  href="{{ url_for('auth.login') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
             {% endif %}
@@ -243,9 +243,9 @@
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, msg in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show m-3">
+          <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
             {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         {% endfor %}
       {% endwith %}
@@ -324,6 +324,19 @@
         if (tooltipInstance) tooltipInstance.hide();
       });
     }
+  </script>
+
+  <script>
+    // Auto-dismiss alerts after 2 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(function(alert) {
+          var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          bsAlert.close();
+        });
+      }, 2000);
+    });
   </script>
 
   <div class="sidebar-backdrop" id="sidebarBackdrop"></div>

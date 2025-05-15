@@ -3,41 +3,61 @@
 
 {% block content %}
 <style>
+  .kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
   .kpi-card {
-    min-width: 180px;
-    height: 130px;
+    width: 210px;
+    height: 150px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border-radius: 1rem;
+    border-radius: 1.2rem;
     transition: box-shadow 0.2s, transform 0.2s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 12px rgba(34,102,34,0.08);
     background: #fff;
     border: none;
-    margin-bottom: 1rem;
+    padding: 0;
+    margin: 0;
+    position: relative;
   }
   .kpi-card:hover {
-    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    box-shadow: 0 8px 32px rgba(34,102,34,0.13);
     transform: translateY(-4px) scale(1.03);
   }
   .kpi-icon {
-    font-size: 2.2em;
-    margin-bottom: 0.3em;
+    font-size: 2.6em;
+    margin-bottom: 0.2em;
     color: #FFD600;
     text-shadow: 0 2px 8px rgba(34,102,34,0.10);
   }
   .kpi-card small {
-    font-size: 0.9em;
+    font-size: 1.05em;
     color: #4CAF50;
     font-weight: 600;
     letter-spacing: 0.5px;
+    margin-bottom: 0.2em;
   }
   .kpi-card h3 {
     margin: 0;
-    font-size: 1.7em;
+    font-size: 1.25em;
     font-weight: 700;
     color: #226622;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  @media (max-width: 1200px) {
+    .kpi-card { width: 180px; height: 140px; }
+    .kpi-row { gap: 1.2rem; }
+  }
+  @media (max-width: 768px) {
+    .kpi-card { width: 100%; min-width: 0; height: 120px; margin-bottom: 1rem; }
+    .kpi-row { flex-direction: column; gap: 0.5rem; }
   }
   .dashboard-section {
     margin-bottom: 2.5rem;
@@ -67,24 +87,20 @@
   <h2 class="mb-4 fw-bold text-primary">Match Analytics Dashboard</h2>
 
   <!-- KPI cards -->
-  <div class="row g-3 dashboard-section justify-content-center">
+  <div class="kpi-row dashboard-section">
     {% set cards = [
-      ('<i class=\'fas fa-table-tennis-ball kpi-icon\'></i>', 'Total Matches', total_matches),
+      ('<i class=\'fas fa-table-tennis-paddle-ball kpi-icon\'></i>', 'Total Matches', total_matches),
       ('<i class=\'fas fa-calendar-alt kpi-icon\'></i>', 'Busiest Month', busiest_month),
       ('<i class=\'fas fa-chart-line kpi-icon\'></i>', 'Avg Matches/Month', avg_per_month),
       ('<i class=\'fas fa-trophy kpi-icon\'></i>', 'Highest Win %', highest_win_player ~ ' (' ~ highest_win_pct ~ '%)'),
       ('<i class=\'fas fa-user-slash kpi-icon\'></i>', 'Lowest Win %', lowest_win_player ~ ' (' ~ lowest_win_pct ~ '%)')
     ] %}
     {% for icon, title, value in cards %}
-    <div class="col-6 col-sm-4 col-md-2 d-flex justify-content-center">
-      <div class="card kpi-card shadow-sm text-center">
-        <div class="card-body p-2">
-          {{ icon|safe }}
-          <small class="d-block mb-1">{{ title }}</small>
-          <h3>{{ value }}</h3>
-        </div>
+      <div class="kpi-card text-center">
+        {{ icon|safe }}
+        <small>{{ title }}</small>
+        <h3>{{ value }}</h3>
       </div>
-    </div>
     {% endfor %}
   </div>
 

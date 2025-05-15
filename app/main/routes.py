@@ -555,9 +555,10 @@ def share():
                 'date':       sr.timestamp.strftime('%Y-%m-%d'),
                 'tournament': mr.tournament_name,
                 'players':    f"{p1.name or '-'} vs {p2.name or '-'}",
-                'recipient':  sr.recipient.username
+                'recipient':  sr.recipient.username,
+                'share_id':   sr.id
             })
-
+        
         return render_template(
             'main/share.html',
             share_matches=share_matches,
@@ -606,7 +607,16 @@ def share():
 
     return jsonify({'result': 'shared_private'}), 200
 
-
+@bp.route('/delete_match/<int:match_id>', methods=['POST'])
+@login_required
+def delete_match(match_id):
+    match = MatchResult.query.get_or_404(match_id)
+    # Only allow the owner to delete their own match
+    if match.user_id != current_user.id:
+        abort(403)
+    db.session.delete(match)
+    db.session.commit()
+    return jsonify({'result': 'deleted'})
 
 @bp.route('/unshare/<int:share_id>', methods=['POST'])
 @login_required
@@ -643,3 +653,4 @@ def bulk_delete_players():
     # Delete players with these IDs from the database
     # Add a flash message
     return redirect(url_for('main.manage_players'))
+    

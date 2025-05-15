@@ -24,7 +24,7 @@ Student name: Zhenhao Zhu           Student ID: 24065267            Github: dyna
 
 Student name: Thanh Vinh Tong       Student ID: 22800814            Github: ThanhVinhTong
 
-Student name: Mei Li                Student ID: 24212345            Github: meiliyuri
+Student name: Mei Li                Student ID: 24212345            Github: Meiliyuri0513
 
 Student name: Aarthi Vadivel        Student ID: 24310357            Github: Aarthi2809
 

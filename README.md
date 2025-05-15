@@ -137,6 +137,7 @@ The test suite consists of two main test files:
    - Tests homepage elements
 
 ```bash
+pytest tests/test_models.py
 pytest tests/test_forms.py
 pytest tests/test_selenium.py
 ```

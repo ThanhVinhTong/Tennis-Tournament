@@ -108,6 +108,7 @@ CITS5505-Group-60-project/
 │   ├── conftest.py       # Test configuration
 │   ├── test_auth.py      # Authentication tests
 │   ├── test_models.py    # Model tests
+│   ├── test_init.py      # init tests
 │   └── test_routes.py    # Route tests
 │
 ├── migrations/        # Flask-Migrate migration script
@@ -139,5 +140,6 @@ The test suite consists of two main test files:
 ```bash
 pytest tests/test_models.py
 pytest tests/test_forms.py
+pytest tests/test_init.py
 pytest tests/test_selenium.py
 ```

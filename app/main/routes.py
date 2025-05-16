@@ -8,9 +8,6 @@ from sqlalchemy import func, desc
 from collections import defaultdict
 import statistics
 from flask_socketio import join_room
-
-
-
 from app import db, socketio
 from app.main import bp
 from app.models import Player, MatchResult, ShareResult, User, MatchCalendar
@@ -19,10 +16,11 @@ from app.main.forms import PlayerForm, MatchResultForm, UploadForm
 import csv, io, json, logging
 
 
-# Configure logging
+# Configure module-level logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# —— Public Endpoints —— #
 @bp.route('/home')
 def home():
     """
@@ -40,6 +38,7 @@ def index():
         return render_template('main/home.html', is_authenticated=True)
     return redirect(url_for('auth.login'))
 
+# —— Calendar API —— #
 @bp.route('/api/matches', methods=['GET'])
 def get_matches():
     try:
@@ -55,9 +54,10 @@ def get_matches():
                 func.extract('month', MatchCalendar.match_date) == month,
                 func.extract('year', MatchCalendar.match_date) == year
             ).all()
+            # Map day number to serialized match object
             matches_by_day = {str(match.match_date.day): match.to_dict() for match in matches}  # Ensure string keys
         else:
-            # Return empty matches for public access
+            # Public users see no matches
             matches_by_day = {}
 
         return jsonify(matches_by_day), 200
@@ -73,7 +73,7 @@ def add_match():
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-
+        # Extract and validate fields
         title = data.get('title')
         players = data.get('players')
         time = data.get('time')
@@ -207,12 +207,36 @@ def upload():
         data = upload_form.csv_file.data.read().decode('utf-8')
         stream = io.StringIO(data)
         reader = csv.DictReader(stream)
+        
+        
+        
+        
+        
+        required_cols = [
+        'tournament_name',
+        'player1',
+        'player2',
+        'score',
+        'winner',
+        'match_date'
+        ]
+        if reader.fieldnames is None or not all(col in reader.fieldnames for col in required_cols):
+            flash(
+                '⚠️ CSV The format does not meet the requirements and must contain columns:'
+                + ', '.join(required_cols),
+                'danger'
+            )
+            return redirect(url_for('main.upload'))
+
+        
+        
 
         rows, errors = [], []
         for idx, row in enumerate(reader, start=1):
-            missing = [k for k,v in row.items() if not v or not v.strip()]
+            missing = [c for c in required_cols if not row.get(c) or not row[c].strip()]
+            #missing = [k for k,v in row.items() if not v or not v.strip()]
             if missing:
-                errors.append((idx, missing))
+                errors.append({'row': idx, 'missing': missing})
             rows.append(row)
 
         return render_template(
@@ -295,6 +319,8 @@ def upload_confirm():
     flash(f'✅ Successfully imported {count} records.', 'success')
     return redirect(url_for('main.view_stats'))
 
+
+# —— Statistics View —— #
 @bp.route('/view_stats')
 @login_required
 def view_stats():
@@ -324,7 +350,6 @@ def view_stats():
     avg_per_month = round(total_matches / len(month_counts), 1) if month_counts else 0
 
     # —— Player Statistics —— #
-    
     player_ids = set()
     for m in matches:
         player_ids.add(m.player1_id)
@@ -383,7 +408,8 @@ def view_stats():
 
     pie_labels = player_names
     pie_data   = win_counts
-
+    
+    # Render the stats template with computed metrics and chart data
     return render_template(
         'main/view_stats.html',
         total_matches=total_matches,
@@ -577,7 +603,6 @@ def share():
             share_history=share_history
         )
 
-    # POST: Handle private sharing, retain the original logic and trigger WebSocket notification
     data = request.get_json() or {}
     match_ids = data.get('match_ids', [])
     usernames = data.get('usernames', [])

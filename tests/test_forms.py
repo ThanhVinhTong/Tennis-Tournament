@@ -11,6 +11,10 @@ from flask_wtf.csrf import CSRFProtect
 
 @pytest.fixture
 def app():
+    """
+    Creates and configures a Flask test application.
+    Returns a Flask app instance with CSRF protection disabled for testing.
+    """
     app = Flask(__name__)
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
     app.secret_key = 'test'
@@ -19,20 +23,37 @@ def app():
 
 @pytest.fixture
 def client(app):
+    """
+    Creates a test client for the Flask application.
+    Returns a test client that can be used to simulate HTTP requests.
+    """
     return app.test_client()
 
 def test_player_form_valid(app):
+    """
+    Tests that the PlayerForm validates correctly with valid input data.
+    Checks if form validates when proper name and country are provided.
+    """
     with app.test_request_context():
         form = PlayerForm(name="Roger Federer", country="Switzerland")
         assert form.validate() is True
 
 def test_player_form_missing_name(app):
+    """
+    Tests that the PlayerForm properly handles missing name field.
+    Verifies that form validation fails when name is empty and appropriate error message is shown.
+    """
     with app.test_request_context():
         form = PlayerForm(name="", country="India")
         assert form.validate() is False
         assert "This field is required." in form.name.errors[0]
 
 def test_match_result_future_date_invalid(app):
+    """
+    Tests that the MatchResultForm rejects future dates.
+    Verifies that form validation fails when match date is set to tomorrow
+    and appropriate error message is displayed.
+    """
     with app.test_request_context():
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 
@@ -58,6 +79,10 @@ def test_match_result_future_date_invalid(app):
         assert "Match date cannot be in the future." in form.match_date.errors[0]
 
 def test_upload_form_accepts_csv(app):
+    """
+    Tests that the UploadForm accepts valid CSV files.
+    Creates a mock CSV file and verifies that form validation passes.
+    """
     with app.test_request_context():
         file_data = FileStorage(
             stream=io.BytesIO(b"name,score\nplayer1,10"),
@@ -69,6 +94,11 @@ def test_upload_form_accepts_csv(app):
         assert form.validate() is True
 
 def test_upload_form_rejects_non_csv(app):
+    """
+    Tests that the UploadForm rejects non-CSV files.
+    Attempts to upload an HTML file and verifies that form validation fails
+    with appropriate error message.
+    """
     with app.test_request_context():
         file_data = FileStorage(
             stream=io.BytesIO(b"<html>not csv</html>"),
@@ -81,6 +111,10 @@ def test_upload_form_rejects_non_csv(app):
         assert "Only CSV format is allowed" in form.csv_file.errors[0]
 
 def test_share_form_exists(app):
+    """
+    Tests that the ShareForm exists and validates with default values.
+    Verifies basic functionality of the share form.
+    """
     with app.test_request_context():
         form = ShareForm()
         assert form.validate() is True

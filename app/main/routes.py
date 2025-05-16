@@ -12,7 +12,7 @@ from app import db, socketio
 from app.main import bp
 from app.models import Player, MatchResult, ShareResult, User, MatchCalendar
 from app.main import bp
-from app.main.forms import PlayerForm, MatchResultForm, UploadForm
+from app.main.forms import PlayerForm, MatchResultForm, UploadForm, UploadPlayersForm
 import csv, io, json, logging
 
 
@@ -154,11 +154,51 @@ def add_match():
 @bp.route('/players', methods=['GET', 'POST'])
 @login_required
 def manage_players():
-    form = PlayerForm()
-    players = Player.query.order_by(Player.name).all()
+    form        = PlayerForm(prefix='p')
+    upload_form = UploadPlayersForm(prefix='up')
+    players     = Player.query.order_by(Player.name).all()
 
-    if form.validate_on_submit():
-        # Avoid duplicate names
+    # —— 1. batch upload player ——
+    if upload_form.validate_on_submit() and upload_form.submit_csv.data:
+        data   = upload_form.csv_file.data.read().decode('utf-8')
+        stream = io.StringIO(data)
+        reader = csv.DictReader(stream)
+
+        # Verify header
+        required_cols = ['name', 'country']
+        if reader.fieldnames is None or not all(col in reader.fieldnames for col in required_cols):
+            flash(
+              '⚠️ CSV format does not meet the requirements, it must contain the columns:'
+              + ', '.join(required_cols),
+              'danger'
+            )
+            return redirect(url_for('main.manage_players'))
+
+        # Import line by line
+        added, skipped = 0, []
+        for idx, row in enumerate(reader, start=1):
+            name = row.get('name','').strip()
+            if not name:
+                skipped.append(f'Line {idx}: name cannot be empty')
+                continue
+            
+            if Player.query.filter_by(name=name).first():
+                skipped.append(f'Line {idx}: {name} already exists')
+                continue
+            country = row.get('country','').strip() or None
+            p = Player(name=name, country=country)
+            db.session.add(p)
+            added += 1
+
+        db.session.commit()
+        msg = f'✅ Successfully added {added} players'
+        if skipped:
+            msg += ';jump over:' + '；'.join(skipped)
+        flash(msg, 'success')
+        return redirect(url_for('main.manage_players'))
+
+    # —— 2. Add a single entry —— Keep the original logic unchanged ——
+    if form.validate_on_submit() and form.submit.data:
         if Player.query.filter_by(name=form.name.data).first():
             flash('Player already exists.', 'warning')
         else:
@@ -168,7 +208,13 @@ def manage_players():
             flash('✅ Player added.', 'success')
         return redirect(url_for('main.manage_players'))
 
-    return render_template('main/players.html', form=form, players=players)
+    
+    return render_template(
+        'main/players.html',
+        form=form,
+        upload_form=upload_form,
+        players=players
+    )
 
 @bp.route('/players/delete/<int:pid>', methods=['POST'])
 @login_required

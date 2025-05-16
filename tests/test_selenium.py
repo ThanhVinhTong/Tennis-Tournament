@@ -1,4 +1,4 @@
-import unittest
+import unittest, time
 from contextlib import contextmanager
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options
@@ -37,6 +37,7 @@ class TestBase(TestCase):
         """Set up test database and webdriver before each test"""
         db.create_all()
         self.driver = webdriver.Edge(options=self.options)
+        self.driver.maximize_window()
         self.wait = WebDriverWait(self.driver, self.WAIT_TIMEOUT)
         
         # Create test user
@@ -83,11 +84,11 @@ class TestBase(TestCase):
             )
         except TimeoutException:
             self.fail(f"URL did not change to contain: {url_part}")
-
+    
 class TestWebApp(TestBase):
     def test_homepage_loads(self):
         """Test if homepage loads with navbar and footer"""
-        self.driver.get(f"{self.BASE_URL}/")
+        self.driver.get(f"{self.BASE_URL}/home")
         
         # Check navbar exists
         navbar = self.wait_for_element(By.CLASS_NAME, "navbar")
@@ -107,8 +108,10 @@ class TestWebApp(TestBase):
         self.wait_for_element(By.ID, "password").send_keys("NewPass123!")
         self.wait_for_element(By.ID, "country").send_keys("AUSTRALIA")
         
-        # Submit form
-        self.wait_for_element(By.CLASS_NAME, "btn-primary").click()
+        # Submit form using the preferred style
+        WebDriverWait(self.driver, self.WAIT_TIMEOUT).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-tennis"))
+        ).click()
         
         # Verify redirect to login page
         self.wait_for_url_change("login")
@@ -117,9 +120,13 @@ class TestWebApp(TestBase):
         """Test both failed and successful login attempts"""
         # Test failed login
         self.driver.get(f"{self.BASE_URL}/auth/login")
-        self.wait_for_element(By.ID, "username").send_keys("wronguser")
-        self.wait_for_element(By.ID, "password").send_keys("wrongpass")
-        self.wait_for_element(By.CLASS_NAME, "btn-primary").click()
+        self.wait_for_element(By.NAME, "username").clear()
+        self.wait_for_element(By.NAME, "username").send_keys("wronguser")
+        self.wait_for_element(By.NAME, "password").send_keys("wrongpass")
+        # Click login using the preferred style
+        WebDriverWait(self.driver, self.WAIT_TIMEOUT).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-tennis"))
+        ).click()
         
         # Verify still on login page
         self.wait_for_element(By.ID, "username")
@@ -130,7 +137,10 @@ class TestWebApp(TestBase):
         self.wait_for_element(By.NAME, "username").send_keys("VinceTong")
         self.wait_for_element(By.NAME, "password").clear()
         self.wait_for_element(By.NAME, "password").send_keys("123456")
-        self.wait_for_element(By.XPATH, "//button[text()='Log In']").click()
+        # Click login using the preferred style
+        WebDriverWait(self.driver, self.WAIT_TIMEOUT).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-tennis"))
+        ).click()
         
         # Verify successful login redirect
         self.wait_for_url_change("home")

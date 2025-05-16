@@ -43,7 +43,8 @@ Student name: Aarthi Vadivel        Student ID: 24310357            Github: Aart
    ```
 2. **Create and activate a virtual environment**
    ```bash
-   python3 -m venv venv
+   python3 -m venv venv / 
+   python -m venv venv (windows 11)
    # MacOS/Linux:
    source venv/bin/activate
    # Windows PowerShell:

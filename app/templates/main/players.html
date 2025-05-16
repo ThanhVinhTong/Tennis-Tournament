@@ -4,7 +4,7 @@
 <div class="container mt-4 manage-players-section">
   <h3>🎾 Manage Players</h3>
 
-  <!-- Flash 提示 -->
+  <!-- Flash Tips -->
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% if msgs %}
       {% for cat, m in msgs %}
@@ -16,7 +16,7 @@
     {% endif %}
   {% endwith %}
 
-  <!-- 单条添加表单 -->
+  <!-- Single add form -->
   <form method="POST" class="row g-3 mb-3 align-items-end">
     {{ form.hidden_tag() }}
     <div class="col-md-5">
@@ -32,14 +32,14 @@
     </div>
   </form>
 
-  <!-- 批量上传按钮 -->
+  <!-- Bulk upload button -->
   <button class="btn btn-secondary mb-3"
           data-bs-toggle="modal"
           data-bs-target="#playerUploadModal">
     Batch Upload Players CSV
   </button>
 
-  <!-- 批量上传 Modal -->
+  <!-- Bulk Upload Modal -->
   <div class="modal fade" id="playerUploadModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -73,7 +73,7 @@
     </div>
   </div>
 
-  <!-- 现有玩家列表 -->
+  <!-- List of current players -->
   <table class="table table-striped">
     <thead>
       <tr><th>#</th><th>Name</th><th>Country</th><th>Action</th></tr>

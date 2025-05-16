@@ -32,7 +32,7 @@
 
       // Listen for backend new_share events
       socket.on('new_share', data => {
-        alert(`🔔 ${data.from} 已与您分享 ${data.match_ids.length} 场比赛`);
+        alert(`🔔 ${data.from} Shared with you ${data.match_ids.length} Matches`);
         // Automatically refresh the current page and update the "Received Results" table
         location.reload();
       });

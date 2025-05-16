@@ -4,7 +4,20 @@
 <div class="container mt-4 manage-players-section">
   <h3>🎾 Manage Players</h3>
 
-  <form method="POST" class="row g-3 mb-4 align-items-end">
+  <!-- Flash 提示 -->
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      {% for cat, m in msgs %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+          {{ m }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- 单条添加表单 -->
+  <form method="POST" class="row g-3 mb-3 align-items-end">
     {{ form.hidden_tag() }}
     <div class="col-md-5">
       {{ form.name.label(class="form-label") }}
@@ -14,13 +27,57 @@
       {{ form.country.label(class="form-label") }}
       {{ form.country(class="form-control") }}
     </div>
-    <div class="col-md-2 d-flex align-items-end">
-      {{ form.submit(class="btn btn-success w-100 h-100") }}
+    <div class="col-md-2">
+      {{ form.submit(class="btn btn-success w-100") }}
     </div>
   </form>
 
+  <!-- 批量上传按钮 -->
+  <button class="btn btn-secondary mb-3"
+          data-bs-toggle="modal"
+          data-bs-target="#playerUploadModal">
+    Batch Upload Players CSV
+  </button>
+
+  <!-- 批量上传 Modal -->
+  <div class="modal fade" id="playerUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Batch Upload Players</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3">
+            Upload a CSV with two columns:<br>
+            <strong>name, country</strong><br>
+            
+          </p>
+          <form method="post"
+                action="{{ url_for('main.manage_players') }}"
+                enctype="multipart/form-data">
+            {{ upload_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ upload_form.csv_file.label(class="form-label") }}
+              {{ upload_form.csv_file(class="form-control") }}
+              {% for e in upload_form.csv_file.errors %}
+                <div class="text-danger">{{ e }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-4">
+              {{ upload_form.submit_csv(class="btn btn-primary w-100") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 现有玩家列表 -->
   <table class="table table-striped">
-    <thead><tr><th>#</th><th>Name</th><th>Country</th><th>Action</th></tr></thead>
+    <thead>
+      <tr><th>#</th><th>Name</th><th>Country</th><th>Action</th></tr>
+    </thead>
     <tbody>
       {% for p in players %}
       <tr>
@@ -28,7 +85,8 @@
         <td>{{ p.name }}</td>
         <td>{{ p.country or '-' }}</td>
         <td>
-          <form method="POST" action="{{ url_for('main.delete_player', pid=p.id) }}"
+          <form method="POST"
+                action="{{ url_for('main.delete_player', pid=p.id) }}"
                 onsubmit="return confirm('Delete {{ p.name }}?');">
             <button class="btn btn-sm btn-outline-danger">Delete</button>
           </form>
@@ -38,4 +96,5 @@
     </tbody>
   </table>
 </div>
+
 {% endblock %}

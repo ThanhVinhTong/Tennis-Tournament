@@ -43,5 +43,10 @@ class ShareForm(FlaskForm):
 
 
 
-
+class UploadPlayersForm(FlaskForm):
+    csv_file   = FileField('Player CSV File', validators=[
+        FileRequired(message='Please select a CSV file'),
+        FileAllowed(['csv'], 'Only CSV files allowed!')
+    ])
+    submit_csv = SubmitField('Upload Players CSV')
 

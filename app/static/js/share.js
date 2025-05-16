@@ -35,15 +35,6 @@ $(function () {
   // Refresh dropdown when matches are (de)selected
   $('.match-checkbox, #checkAll').on('change', refreshShareUsersDropdown);
 
-  // --- Enable/disable Share button ---
-  function updateShareBtn() {
-    const users = $('#shareUsers').val();
-    const matches = $('.match-checkbox:checked').length;
-    $('#btnShare').prop('disabled', !(users && users.length && matches));
-  }
-  $('#shareUsers').on('change', updateShareBtn);
-  $('.match-checkbox, #checkAll').on('change', updateShareBtn);
-
   // --- Row highlight ---
   $('.match-checkbox').on('change', function() {
     $(this).closest('tr').toggleClass('table-primary', this.checked);
@@ -52,12 +43,6 @@ $(function () {
   // --- Check all ---
   $('#checkAll').on('change', function() {
     $('.match-checkbox').prop('checked', this.checked).trigger('change');
-  });
-
-  // --- Share button spinner ---
-  $('#btnShare').on('click', function() {
-    $('#shareSpinner').removeClass('d-none');
-    $(this).prop('disabled', true);
   });
 
   // --- History search ---

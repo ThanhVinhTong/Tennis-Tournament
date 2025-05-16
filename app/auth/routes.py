@@ -26,17 +26,32 @@ def login():
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            country=form.country.data  
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful. You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
+    if request.method == 'POST':
+        # 1. Do format validation first (including Email() validator)
+        if form.validate_on_submit():
+            user = User(
+                username=form.username.data,
+                email=form.email.data,
+                country=form.country.data
+            )
+            user.set_password(form.password.data)
+            db.session.add(user)
+            try:
+                db.session.commit()
+                flash('Registration successful. You can now log in.', 'success')
+                return redirect(url_for('auth.login'))
+            except IntegrityError:
+                db.session.rollback()
+                flash('This email is already registered or invalid. Please use another email.', 'danger')
+            except Exception:
+                db.session.rollback()
+                flash('Registration failed due to server error. Please try again later.', 'danger')
+        else:
+            # 2. If format validation fails, collect and flash the error of each field
+            for field, errors in form.errors.items():
+                label = getattr(form, field).label.text
+                for error in errors:
+                    flash(f"{label}: {error}", 'danger')
     return render_template('auth/register.html', form=form)
 
 

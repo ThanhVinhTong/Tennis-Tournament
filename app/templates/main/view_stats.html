@@ -3,55 +3,113 @@
 
 {% block content %}
 <style>
+  .kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
   .kpi-card {
-    width: 150px;
-    height: 120px;
+    width: 210px;
+    height: 150px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    border-radius: 1.2rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 2px 12px rgba(34,102,34,0.08);
+    background: #fff;
+    border: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
   }
-  .kpi-card .card-body {
-    padding: 10px;
+  .kpi-card:hover {
+    box-shadow: 0 8px 32px rgba(34,102,34,0.13);
+    transform: translateY(-4px) scale(1.03);
+  }
+  .kpi-icon {
+    font-size: 2.6em;
+    margin-bottom: 0.2em;
+    color: #FFD600;
+    text-shadow: 0 2px 8px rgba(34,102,34,0.10);
   }
   .kpi-card small {
-    font-size: 0.8em;
+    font-size: 1.05em;
+    color: #4CAF50;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2em;
   }
   .kpi-card h3 {
     margin: 0;
-    font-size: 1.5em;
+    font-size: 1.25em;
+    font-weight: 700;
+    color: #226622;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  @media (max-width: 1200px) {
+    .kpi-card { width: 180px; height: 140px; }
+    .kpi-row { gap: 1.2rem; }
+  }
+  @media (max-width: 768px) {
+    .kpi-card { width: 100%; min-width: 0; height: 120px; margin-bottom: 1rem; }
+    .kpi-row { flex-direction: column; gap: 0.5rem; }
+  }
+  .dashboard-section {
+    margin-bottom: 2.5rem;
+  }
+  .dashboard-section .card-header {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: #226622 !important;
+    color: #fff !important;
+  }
+  .table th, .table td {
+    vertical-align: middle;
+  }
+  body, .container-fluid {
+    background: linear-gradient(180deg, #f6fff6 0%, #e8f5e9 100%);
+  }
+  .fw-bold.text-primary {
+    color: #226622 !important;
+  }
+  .table thead.table-light th {
+    background: #C8E6C9;
+    color: #226622;
   }
 </style>
-<div class="container-fluid">
-  <h2 class="mb-4">Match Analytics Dashboard</h2>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<div class="container-fluid px-3 px-md-5 py-4">
+  <h2 class="mb-4 fw-bold text-primary">Match Analytics Dashboard</h2>
 
   <!-- KPI cards -->
-  <div class="row mb-4">
+  <div class="kpi-row dashboard-section">
     {% set cards = [
-      ('Total Matches', total_matches),
-      ('Busiest Month', busiest_month),
-      ('Avg Matches/Month', avg_per_month),
-      ('Highest Win %', highest_win_player ~ ' (' ~ highest_win_pct ~ '%)'),
-      ('Lowest Win %', lowest_win_player ~ ' (' ~ lowest_win_pct ~ '%)')
+      ('<i class=\'fas fa-table-tennis-paddle-ball kpi-icon\'></i>', 'Total Matches', total_matches),
+      ('<i class=\'fas fa-calendar-alt kpi-icon\'></i>', 'Busiest Month', busiest_month),
+      ('<i class=\'fas fa-chart-line kpi-icon\'></i>', 'Avg Matches/Month', avg_per_month),
+      ('<i class=\'fas fa-trophy kpi-icon\'></i>', 'Highest Win %', highest_win_player ~ ' (' ~ highest_win_pct ~ '%)'),
+      ('<i class=\'fas fa-user-slash kpi-icon\'></i>', 'Lowest Win %', lowest_win_player ~ ' (' ~ lowest_win_pct ~ '%)')
     ] %}
-    {% for title,value in cards %}
-    <div class="col-md-2 mb-3">
-      <div class="card shadow-sm kpi-card text-center">
-        <div class="card-body">
-          <small class="text-muted">{{ title }}</small>
-          <h3 class="mt-2">{{ value }}</h3>
-        </div>
+    {% for icon, title, value in cards %}
+      <div class="kpi-card text-center">
+        {{ icon|safe }}
+        <small>{{ title }}</small>
+        <h3>{{ value }}</h3>
       </div>
-    </div>
     {% endfor %}
   </div>
 
   <!-- Win Leaderboard -->
-  <div class="card mb-4">
+  <div class="card mb-4 dashboard-section shadow-sm">
     <div class="card-header bg-secondary text-white">Win Leaderboard</div>
     <div class="card-body p-0">
-      <table class="table mb-0">
-        <thead>
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
           <tr>
             <th>Rank</th>
             <th>Player</th>
@@ -59,11 +117,11 @@
           </tr>
         </thead>
         <tbody>
-          {% for entry in leaderboard %}
+          {% for entry in leaderboard[:10] %}
           <tr>
-            <td>#{{ loop.index }}</td>
+            <td class="fw-bold text-primary">#{{ loop.index }}</td>
             <td>{{ entry.player }}</td>
-            <td>{{ entry.wins }}</td>
+            <td class="fw-bold">{{ entry.wins }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -71,33 +129,32 @@
     </div>
   </div>
 
-
   <!-- Chart Area -->
-  <div class="row">
+  <div class="row g-4 dashboard-section">
     <!-- Bar: Matches Played per Player -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-primary text-white">Matches Played per Player</div>
         <div class="card-body"><canvas id="playedBar" height="200"></canvas></div>
       </div>
     </div>
     <!-- Bar: Wins vs Losses -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-success text-white">Wins vs Losses</div>
         <div class="card-body"><canvas id="winLossBar" height="200"></canvas></div>
       </div>
     </div>
     <!-- Line: Monthly Match Trend -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-info text-white">Monthly Match Trend</div>
         <div class="card-body"><canvas id="trendLine" height="200"></canvas></div>
       </div>
     </div>
     <!-- Pie: Win Distribution -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-warning text-white">Win Distribution</div>
         <div class="card-body"><canvas id="pieChart" height="200"></canvas></div>
       </div>
@@ -113,35 +170,96 @@
 new Chart(document.getElementById('playedBar'), {
   type: 'bar', data: {
     labels: {{ player_names|tojson }},
-    datasets: [{ label: 'Played', data: {{ played_counts|tojson }}, backgroundColor: 'rgba(54,162,235,0.6)' }]
-  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+    datasets: [{ label: 'Played', data: {{ played_counts|tojson }}, backgroundColor: 'rgba(100, 149, 237, 0.4)', borderColor: 'rgba(100, 149, 237, 1)', borderWidth: 2 }]
+  }, options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        beginAtZero: true, stepSize: 1,
+        grid: { color: 'rgba(220,220,220,0.4)' },
+        ticks: { color: '#6c757d' }
+      },
+      x: {
+        grid: { color: 'rgba(220,220,220,0.2)' },
+        ticks: { color: '#6c757d' }
+      }
+    },
+    backgroundColor: 'transparent'
+  }
 });
 // Wins vs Losses
 new Chart(document.getElementById('winLossBar'), {
   type: 'bar', data: {
     labels: {{ player_names|tojson }},
     datasets: [
-      { label: 'Wins', data: {{ win_counts|tojson }}, backgroundColor: 'rgba(75,192,192,0.6)' },
-      { label: 'Losses', data: {{ loss_counts|tojson }}, backgroundColor: 'rgba(255,99,132,0.6)' }
+      { label: 'Wins', data: {{ win_counts|tojson }}, backgroundColor: 'rgba(144, 238, 144, 0.5)', borderColor: 'rgba(60,179,113,1)', borderWidth: 2 },
+      { label: 'Losses', data: {{ loss_counts|tojson }}, backgroundColor: 'rgba(255,182,193,0.5)', borderColor: 'rgba(255,99,132,1)', borderWidth: 2 }
     ]
-  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+  }, options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: {
+        beginAtZero: true, stepSize: 1,
+        grid: { color: 'rgba(220,220,220,0.4)' },
+        ticks: { color: '#6c757d' }
+      },
+      x: {
+        grid: { color: 'rgba(220,220,220,0.2)' },
+        ticks: { color: '#6c757d' }
+      }
+    },
+    backgroundColor: 'transparent'
+  }
 });
 // Monthly Trend
 new Chart(document.getElementById('trendLine'), {
   type: 'line', data: {
     labels: {{ monthly_labels|tojson }},
     datasets: [
-      { label: 'Total Matches', data: {{ monthly_totals|tojson }}, fill: false, tension: 0.2 },
-      { label: 'Trend', data: {{ trend|tojson }}, fill: false, borderDash: [5,5] }
+      { label: 'Total Matches', data: {{ monthly_totals|tojson }}, fill: false, tension: 0.2, borderColor: 'rgba(100, 149, 237, 1)', backgroundColor: 'rgba(100, 149, 237, 0.2)', pointBackgroundColor: 'rgba(100, 149, 237, 1)' },
+      { label: 'Trend', data: {{ trend|tojson }}, fill: false, borderDash: [5,5], borderColor: 'rgba(108,117,125,0.8)', backgroundColor: 'rgba(108,117,125,0.2)', pointBackgroundColor: 'rgba(108,117,125,1)' }
     ]
-  }, options: { responsive: true, scales: { y: { beginAtZero: true, stepSize: 1 } } }
+  }, options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: {
+        beginAtZero: true, stepSize: 1,
+        grid: { color: 'rgba(220,220,220,0.4)' },
+        ticks: { color: '#6c757d' }
+      },
+      x: {
+        grid: { color: 'rgba(220,220,220,0.2)' },
+        ticks: { color: '#6c757d' }
+      }
+    },
+    backgroundColor: 'transparent'
+  }
 });
 // Win Distribution Pie
 new Chart(document.getElementById('pieChart'), {
   type: 'pie', data: {
     labels: {{ pie_labels|tojson }},
-    datasets: [{ data: {{ pie_data|tojson }}, backgroundColor: ['rgba(255,99,132,0.6)','rgba(54,162,235,0.6)','rgba(255,206,86,0.6)','rgba(75,192,192,0.6)','rgba(153,102,255,0.6)'] }]
-  }, options: { responsive: true }
+    datasets: [{ data: {{ pie_data|tojson }}, backgroundColor: [
+      'rgba(100, 149, 237, 0.5)',
+      'rgba(144, 238, 144, 0.5)',
+      'rgba(255, 182, 193, 0.5)',
+      'rgba(255, 206, 86, 0.5)',
+      'rgba(108, 117, 125, 0.3)'
+    ], borderColor: [
+      'rgba(100, 149, 237, 1)',
+      'rgba(60,179,113,1)',
+      'rgba(255,99,132,1)',
+      'rgba(255, 206, 86, 1)',
+      'rgba(108, 117, 125, 1)'
+    ], borderWidth: 2 }]
+  }, options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    backgroundColor: 'transparent'
+  }
 });
 </script>
 {% endblock %}

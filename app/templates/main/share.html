@@ -2,65 +2,108 @@
 {% block title %}Share Match Results{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12 grid-margin stretch-card">
-      <div class="card">
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+          <h4 class="mb-0">Share Match Results</h4>
+          <i class="bi bi-share" style="font-size: 1.5rem;"></i>
+        </div>
         <div class="card-body">
-          <h4 class="card-title">Share Match Results</h4>
 
-
-          <div class="mb-3">
-            <label class="form-label">Select Users to Share With:</label>
-            <div class="d-flex gap-2">
-              <select id="shareUsers" class="form-select" multiple size="5" style="width:100%; max-width:400px;"></select>
-              <div class="d-flex flex-column gap-1">
-                <button class="btn btn-sm btn-outline-secondary" id="clearUsers" type="button">Clear</button>
-              </div>
-            </div>
+          <!-- User Selection -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Select Users to Share With:</label>
+            <select id="shareUsers" class="form-select" multiple style="width:100%; max-width:500px;"></select>
             <div class="form-text text-muted mt-1">
               You cannot share with yourself or users you've already shared this match with.
             </div>
+            <button class="btn btn-sm btn-outline-secondary mt-2" id="clearUsers" type="button">Clear Users</button>
           </div>
 
           <!-- List of matches -->
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th><input type="checkbox" id="checkAll"></th>
-                  <th>Date</th>
-                  <th>Tournament</th>
-                  <th>Players</th>
-                  <th>Score</th>
-                  <th>Winner</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for m in share_matches %}
-                <tr data-id="{{ m.id }}">
-                  <td><input type="checkbox" class="match-checkbox" value="{{ m.id }}"></td>
-                  <td>{{ m.date }}</td>
-                  <td>{{ m.tournament }}</td>
-                  <td>{{ m.players }}</td>
-                  <td>{{ m.score }}</td>
-                  <td>{{ m.winner }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h5 class="mb-0">Your Matches</h5>
+                <input type="text" id="matchesSearch" class="form-control form-control-sm ms-2" style="max-width:220px;" placeholder="Search matches...">
+                <button id="btnDeleteMatches" class="btn btn-danger btn-sm ms-2" disabled>Delete Selected</button>
+              </div>
+              <div class="d-flex align-items-center gap-2 ms-auto">
+                <label for="matchesPerPage" class="form-label mb-0" style="color:#2e9d44;font-weight:500;">Show</label>
+                <select id="matchesPerPage" class="form-select form-select-sm w-auto" style="min-width:60px;">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+                <span class="ms-1" style="color:#2e9d44;font-weight:500;">per page</span>
+              </div>
+            </div>
+            <div class="table-responsive rounded shadow-sm">
+              <table class="table table-hover align-middle" id="matchesTable">
+                <thead class="table-light">
+                  <tr>
+                    <th><input type="checkbox" id="matchesCheckAll"></th>
+                    <th>Date</th>
+                    <th>Tournament</th>
+                    <th>Players</th>
+                    <th>Score</th>
+                    <th>Winner</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for m in share_matches %}
+                  <tr data-id="{{ m.id }}">
+                    <td><input type="checkbox" class="matches-checkbox" value="{{ m.id }}"></td>
+                    <td>{{ m.date }}</td>
+                    <td>{{ m.tournament }}</td>
+                    <td>
+                      {% for p in m.players.split(',') %}
+                        <span class="badge bg-secondary me-1">{{ p.strip() }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ m.score }}</td>
+                    <td><span class="badge bg-success">{{ m.winner }}</span></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <nav aria-label="Matches pagination" class="mt-3">
+              <ul class="pagination justify-content-center custom-pagination mb-0" id="matchesPagination"></ul>
+            </nav>
+            <button id="btnShare" class="btn btn-lg btn-success shadow d-flex align-items-center gap-2 mt-4 px-4 py-2" style="font-weight:600; font-size:1.2rem; border-radius:2rem; box-shadow:0 4px 16px rgba(0,128,0,0.10); background:linear-gradient(90deg,#43c465 0%,#2e9d44 100%); border:none;" disabled>
+              <i class="bi bi-send-fill" style="font-size:1.3rem;"></i>
+              <span>Share Selected</span>
+              <span id="shareSpinner" class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+            </button>
           </div>
-
-          <button id="btnShare" class="btn btn-primary mt-3">Share Selected</button>
 
           <!-- Share History -->
           <hr class="my-4">
-          <h5>Private Share History</h5>
+          <div class="mb-2 d-flex align-items-center gap-2">
+            <h5 class="mb-0">Private Share History</h5>
+            <input type="text" id="historySearch" class="form-control form-control-sm w-auto" placeholder="Search history...">
+            <button id="btnDeleteHistory" class="btn btn-danger btn-sm ms-2" disabled>Delete Selected</button>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+              <label for="historyPerPage" class="form-label mb-0" style="color:#2e9d44;font-weight:500;">Show</label>
+              <select id="historyPerPage" class="form-select form-select-sm w-auto" style="min-width:60px;">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <span class="ms-1" style="color:#2e9d44;font-weight:500;">per page</span>
+            </div>
+          </div>
           {% if share_history %}
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
+          <div class="table-responsive rounded shadow-sm">
+            <table class="table table-striped align-middle" id="historyTable">
+              <thead class="table-light">
                 <tr>
+                  <th><input type="checkbox" id="historyCheckAll"></th>
                   <th>Date</th>
                   <th>Tournament</th>
                   <th>Players</th>
@@ -70,15 +113,27 @@
               <tbody>
                 {% for h in share_history %}
                 <tr>
+                  <td><input type="checkbox" class="history-checkbox" value="{{ h.share_id }}"></td>
                   <td>{{ h.date }}</td>
                   <td>{{ h.tournament }}</td>
-                  <td>{{ h.players }}</td>
-                  <td>{{ h.recipient }}</td>
+                  <td>
+                    {% for p in h.players.split(',') %}
+                      <span class="badge bg-secondary me-1">{{ p.strip() }}</span>
+                    {% endfor %}
+                  </td>
+                  <td><span class="badge bg-info text-dark">{{ h.recipient }}</span>
+                    <button class="btn btn-link btn-sm text-danger ms-2 btn-unshare" data-share-id="{{ h.share_id }}" title="Remove share" style="padding:0 0.3em;vertical-align:middle;">
+                      <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          <nav aria-label="History pagination" class="mt-3">
+            <ul class="pagination justify-content-center custom-pagination mb-0" id="historyPagination"></ul>
+          </nav>
           {% else %}
             <p class="text-muted">No private shares yet.</p>
           {% endif %}
@@ -88,41 +143,143 @@
     </div>
   </div>
 </div>
+
+<style>
+  #shareUsers { min-height: 44px; }
+  .select2-container--default .select2-selection--multiple {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    min-height: 44px;
+    padding: 0.25rem 0.5rem;
+  }
+  .table-hover tbody tr:hover {
+    background-color: #eafbe7;
+    transition: background 0.2s;
+  }
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    --bs-table-accent-bg: #f6fff7;
+  }
+  .badge.bg-success, .badge.bg-info, .badge.bg-secondary {
+    background: linear-gradient(90deg,#43c465 0%,#2e9d44 100%) !important;
+    color: #fff !important;
+    font-weight: 500;
+    border-radius: 1rem;
+    padding: 0.45em 1em;
+    font-size: 1em;
+  }
+  .card-header {
+    background: linear-gradient(90deg,#43c465 0%,#2e9d44 100%) !important;
+    color: #fff !important;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(46,157,68,0.08);
+  }
+  .card {
+    border-radius: 1.5rem !important;
+    background: linear-gradient(120deg,#f8fff9 60%,#eafbe7 100%);
+    box-shadow: 0 4px 24px rgba(67,196,101,0.07);
+  }
+  #btnShare:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  #btnShare:not(:disabled):hover {
+    background: linear-gradient(90deg,#2e9d44 0%,#43c465 100%) !important;
+    box-shadow: 0 6px 24px rgba(46,157,68,0.18);
+    transform: translateY(-2px) scale(1.03);
+    transition: all 0.15s;
+  }
+  .form-label.fw-semibold {
+    color: #2e9d44;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+  }
+  h5.mb-0 {
+    color: #2e9d44;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .table thead th {
+    color: #2e9d44;
+    font-weight: 700;
+    background: #f6fff7;
+    border-bottom: 2px solid #43c46522;
+  }
+  .table-primary {
+    background: #d2f5d8 !important;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #43c465;
+    box-shadow: 0 0 0 0.2rem #43c46533;
+  }
+  @media (max-width: 768px) {
+    .card-header h4 { font-size: 1.1rem; }
+    .table-responsive { font-size: 0.95em; }
+    #btnShare { font-size: 1rem; padding: 0.7em 1.2em; }
+  }
+  .custom-pagination .page-item.active .page-link {
+    background: #e8f5e9 !important;
+    color: #198754 !important;
+    border: 2px solid #b2dfdb;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(25,135,84,0.10);
+    z-index: 1;
+  }
+  .custom-pagination .page-link {
+    color: #198754;
+    border-radius: 0.5rem;
+    margin: 0 2px;
+    border: none;
+    transition: background 0.15s;
+    font-weight: 500;
+  }
+  .custom-pagination .page-link:hover {
+    background: #eafbe7;
+    color: #198754;
+  }
+  .custom-pagination .page-item.disabled .page-link {
+    color: #b0b0b0;
+    background: #f6fff7;
+    border: none;
+  }
+  .custom-pagination {
+    background: #e8f5e9;
+    border-radius: 1.2rem;
+    padding: 0.5em 1em;
+    box-shadow: 0 2px 8px rgba(25,135,84,0.06);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+  }
+</style>
 {% endblock %}
 
 {% block scripts %}
-
   {{ super() }}
   <!-- Socket.IO auto-refresh -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const socket = io();
-
       socket.on('new_share', data => {
-      // Automatically refresh the page when there is a new sharing event
         location.reload();
       });
     });
   </script>
-
   <script>
     //Data injected from the backend
-    const sharedMap   = {{ shared_map|tojson }};      
-    const allUsers    = {{ all_users_data|tojson }};  
-    const currentUser = {{ current_username|tojson }}; 
+    const sharedMap   = {{ shared_map|tojson }};
+    const allUsers    = {{ all_users_data|tojson }};
+    const currentUser = {{ current_username|tojson }};
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="{{ url_for('static', filename='js/share.js') }}"></script>
   <script src="{{ url_for('static', filename='js/share_users.js') }}"></script>
   <!-- Select2 JS -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-
 {% endblock %}
-
-
-
-
-
-
-

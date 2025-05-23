@@ -1,5 +1,6 @@
-# CITS5505-Group-60-project
+# Tennis Tournament
 
+This application's target audience is for small clubs or groups, involving people with great interest for tennis regardless of their tennis abilities.
 A Flask-based web application for tracking tennis tournaments, matches, and player data. Users can upload match data (single or CSV), view analytics, and selectively share results with other users.
 
 ## Project Description
@@ -18,15 +19,14 @@ Built with:
 * **Bootstrap 5** (UI styling)
 * **jQuery** (client-side scripting)
 
-## Team Members
+## Team Members (This is a group project that I participate during the time in UWA. My main responsibilities in this are Home page, UI polishing and a little bit of backend-based)
 
-Student name: Zhenhao Zhu           Student ID: 24065267            Github: dynamicCat
-
-Student name: Thanh Vinh Tong       Student ID: 22800814            Github: ThanhVinhTong
-
-Student name: Mei Li                Student ID: 24212345            Github: Meiliyuri0513
-
-Student name: Aarthi Vadivel        Student ID: 24310357            Github: Aarthi2809
+| Student Name | Student ID | Github |
+|-------------|------------|---------|
+| Zhenhao Zhu | 24065267 | dynamicCat |
+| Thanh Vinh Tong | 22800814 | ThanhVinhTong |
+| Mei Li | 24212345 | Meiliyuri0513 |
+| Aarthi Vadivel | 24310357 | Aarthi2809 |
 
 ## Prerequisites
 
